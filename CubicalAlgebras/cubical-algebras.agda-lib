@@ -1,0 +1,3 @@
+name: cubical-algebras-0.1
+depend: cubical standard-library
+include: . ../../cubical
