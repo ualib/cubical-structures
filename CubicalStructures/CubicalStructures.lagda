@@ -17,7 +17,7 @@ My ~/.agda/libraries file looks like this:
 
 {-# OPTIONS --without-K --exact-split --safe --cubical #-}
 
-module CubicalAlgebras where
+module CubicalStructures where
 
 open import overture
 open import relations
