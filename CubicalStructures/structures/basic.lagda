@@ -9,18 +9,19 @@ author: William DeMeo
 
 {-# OPTIONS --without-K --exact-split --safe --cubical #-}
 
-open import Agda.Primitive using (_⊔_)
-open import Cubical.Core.Primitives using (_≡_; Type; Level; _,_; Σ-syntax; ℓ-zero; ℓ-suc; fst; snd)
+open import Agda.Primitive renaming (lzero to ℓ₀) using (lsuc; _⊔_)
+open import Cubical.Core.Primitives using (_≡_; Type; Level; Σ-syntax; fst; snd)
 open import Cubical.Data.Sigma using (_,_; _×_)
 open import Cubical.Relation.Binary.Base renaming (Rel to REL) using ()
 open import relations.discrete renaming (Rel to BinRel) using (_|:_)
 
+open import overture.preliminaries using (∣_∣; ∥_∥)
+
 module structures.basic where
 
 -- Aliases.
-ℓ₀ ℓ₁ : Level
-ℓ₀ = ℓ-zero
-ℓ₁ = ℓ-suc ℓ-zero
+ℓ₁ : Level
+ℓ₁ = lsuc ℓ₀
 
 
 -- All arity types will have universe level 0.
@@ -35,51 +36,46 @@ Arity = Type ℓ₀
 Op : {𝓤 : Level} → Arity → Type 𝓤 → Type 𝓤
 Op a B = (a → B) → B
 
-Rel : {𝓤 : Level} → Arity → Type 𝓤 → Type (𝓤 ⊔ ℓ₁)
-Rel a B = (a → B) → Type ℓ₀
+Rel : {ρ 𝓤 : Level} → Arity → Type 𝓤 → Type (lsuc ρ ⊔ 𝓤)
+Rel {ρ} a B = (a → B) → Type ρ
 
 -- Inhabitants of the Symbol type are pairs, (s , ar), where s is a symbol and ar is its arity. 
-
-
 
 
 Signature : Type ℓ₁
 Signature = Σ[ F ∈ Type ℓ₀ ] (F → Arity)
 
+-- Inhabitants of Signature type are triples (s , k , a), where s is the symbol, k is the symbol kind (i.e., relation or operation), and a is the arity.
 
--- Inhabitants of Sigature type are triples (s , k , a), where s is the symbol, k is the symbol kind (i.e., relation or operation), and a is the arity.
 
-
--- open _+_
-
-ℛ : {β : Level} → Signature → Type β → Type (β ⊔ ℓ₁)
-ℛ 𝑆 B = ∀ (r : fst 𝑆) → Rel ((snd 𝑆) r) B
+ℛ : {ρ β : Level} → Signature → Type β → Type (lsuc ρ ⊔ β)
+ℛ {ρ} 𝑆 B = ∀ (r : ∣ 𝑆 ∣) → Rel{ρ} (∥ 𝑆 ∥ r) B
 
 ℱ : {β : Level} → Signature → Type β → Type β
-ℱ 𝑆 B = ∀ (f : fst 𝑆) → Op ((snd 𝑆) f) B
+ℱ 𝑆 B = ∀ (f : ∣ 𝑆 ∣) → Op (∥ 𝑆 ∥ f) B
 
-Structure : (β : Level) → (𝑅 𝐹 : Signature) → Type (ℓ-suc β)
-Structure β 𝑅 𝐹 = Σ[ B ∈ Type β ] (ℛ 𝑅 B × ℱ 𝐹 B)
+Structure : {ρ : Level}(β : Level)(𝑅 𝐹 : Signature) → Type (lsuc (ρ ⊔ β))
+Structure {ρ} β 𝑅 𝐹 = Σ[ B ∈ Type β ] (ℛ{ρ} 𝑅 B × ℱ 𝐹 B)
 
-RStructure : (β : Level) → Signature → Type (ℓ-suc β)
-RStructure β 𝑅 = Σ[ B ∈ Type β ] ℛ 𝑅 B
+RStructure : {ρ : Level}(β : Level) → Signature → Type (lsuc (ρ ⊔ β))
+RStructure {ρ} β 𝑅 = Σ[ B ∈ Type β ] ℛ {ρ} 𝑅 B
 
-AStructure : (β : Level) → Signature → Type (ℓ-suc β)
+AStructure : (β : Level) → Signature → Type (lsuc β)
 AStructure β 𝐹 = Σ[ B ∈ Type β ] ℱ 𝐹 B
 
 -- Reducts
-Structure→AStructure : {β : Level} {𝑅 𝐹 : Signature} → Structure β 𝑅 𝐹 → AStructure β 𝐹
+Structure→AStructure : {ρ β : Level} {𝑅 𝐹 : Signature} → Structure {ρ} β 𝑅 𝐹 → AStructure β 𝐹
 Structure→AStructure (B , (ℛ , ℱ)) = B , ℱ
 
-Structure→RStructure : {β : Level} {𝑅 𝐹 : Signature} → Structure β 𝑅 𝐹 → RStructure β 𝑅
+Structure→RStructure : {ρ β : Level} {𝑅 𝐹 : Signature} → Structure {ρ} β 𝑅 𝐹 → RStructure β 𝑅
 Structure→RStructure (B , (ℛ , ℱ)) = B , ℛ
 
 
-module _ {β : Level}{𝑅 𝐹 : Signature}  where
-  rel : ((B , (ℛ , ℱ)) : Structure β 𝑅 𝐹) → (r : fst 𝑅) → Rel ((snd 𝑅) r) B
+module _ {ρ β : Level}{𝑅 𝐹 : Signature}  where
+  rel : ((B , (ℛ , ℱ)) : Structure {ρ} β 𝑅 𝐹) → (r : ∣ 𝑅 ∣) → Rel (∥ 𝑅 ∥ r) B
   rel (_ , (ℛ , _)) = ℛ
 
-  op : ((B , (ℛ , ℱ)) : Structure β 𝑅 𝐹) → (f : fst 𝐹) → Op ((snd 𝐹) f) B
+  op : ((B , (ℛ , ℱ)) : Structure {ρ} β 𝑅 𝐹) → (f : ∣ 𝐹 ∣) → Op (∥ 𝐹 ∥ f) B
   op (_ , (_ , ℱ)) = ℱ
 
 {- Let 𝑅 and 𝐹 be signatures and let ℬ = (B , (ℛ , ℱ)) be an (𝑅, 𝐹)-structure.
@@ -104,6 +100,24 @@ module _ {β : Level}{𝑅 𝐹 : Signature}  where
 
   compatible : {ℓ : Level}(𝑩 : Structure β 𝑅 𝐹) → BinRel (fst 𝑩) ℓ  → Type (β ⊔ ℓ)
   compatible 𝑩 r = ∀ 𝑓 → (𝑓 ᵒ 𝑩) |: r
+
+-- Alternative development using records
+
+record Sig : Type ℓ₁ where
+ field
+  symbol : Type ℓ₀
+  arity : symbol → Arity
+
+open Sig
+
+
+record structure {ρ : Level}(β : Level)(𝑅 𝐹 : Sig) : Type (lsuc (ρ ⊔ β)) where
+ field
+  univ : Type β
+  relation : ∀ (r : symbol 𝑅) → Rel{ρ}(arity 𝑅 r) univ  -- interpretations of relations
+  operation : ∀ (f : symbol 𝐹) → Op (arity 𝐹 f) univ     -- interpretations of operations
+
+
 
 
 \end{code}

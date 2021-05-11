@@ -13,7 +13,8 @@ author: William DeMeo
 open import Agda.Primitive using (_⊔_; lsuc)
 
 -- Imports from Cubical Agda
-open import Cubical.Core.Primitives using (_≡_; Type; Level)
+open import Cubical.Core.Primitives using (_≡_; Type; Level;Σ-syntax; fst; snd; _,_)
+-- open import Cubical.Core.Primitives using (_≡_; Type; Level; i0; i1
 open import Cubical.Foundations.Prelude using (refl; sym; _∙_; Lift; lift; lower)
 open import Cubical.Foundations.Function using (_∘_)
 
@@ -28,9 +29,19 @@ variable
 -Π : (A : Type 𝓤 )(B : A → Type 𝓦 ) → Type(𝓤 ⊔ 𝓦)
 -Π A B = Π B
 
-infixr 3 -Π
+infixr 6 -Π
 syntax -Π A (λ x → B) = Π[ x ꞉ A ] B  -- type \,3 to get ⸲
 
+
+module _ {A : Type 𝓤 }{B : A → Type 𝓥} where
+
+ ∣_∣ : Σ[ x ∈ A ] B x → A
+ ∣ x , y ∣ = x
+
+ ∥_∥ : (z : Σ[ a ∈ A ] B a) → B ∣ z ∣
+ ∥ x , y ∥ = y
+
+ infix  40 ∣_∣ ∥_∥
 
 _⁻¹ : {A : Type 𝓤} {x y : A} → x ≡ y → y ≡ x
 p ⁻¹ = sym p
