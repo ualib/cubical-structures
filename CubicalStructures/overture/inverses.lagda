@@ -11,16 +11,20 @@ author: William DeMeo
 
 -- Imports from the Agda (Builtin) and the Agda Standard Library
 open import Agda.Builtin.Bool using (true; false)
-open import Agda.Builtin.Equality using (_≡_; refl)
-open import Agda.Primitive using (_⊔_; lzero; lsuc; Level; Setω)
-open import Data.Product using (_,_; Σ; _×_; ∃; ∃-syntax)
-open import Function.Base  using (_∘_; id)
-open import Relation.Binary.PropositionalEquality.Core using (cong; cong-app)
+open import Agda.Primitive using (_⊔_)
+open import Data.Product using (∃; ∃-syntax)
 open import Relation.Nullary using (Dec; _because_; ofʸ)
-open import Relation.Unary using (Pred; _∈_; _⊆_)
+open import Relation.Unary using (Pred; _∈_) -- ; _⊆_)
 
--- Imports from the Agda Universal Algebra Library
-open import overture.preliminaries using (Type; 𝓤; 𝓥; 𝓦; 𝓩; _⁻¹; -Σ; _≈_; 𝑖𝑑; fst; snd; ∣_∣; ∥_∥; _≡⟨_⟩_; _∎; _∙_ )
+-- Imports from Cubical Agda
+open import Cubical.Core.Primitives
+open import Cubical.Foundations.Prelude using (_≡_; refl; sym; _∙_; Type)
+open import Cubical.Foundations.Function using (_∘_)
+open import Cubical.Relation.Nullary renaming (Dec to cDec)
+open import Cubical.Data.Sigma using (_×_)
+
+
+open import overture.preliminaries using (𝓤; 𝓥; 𝓦; 𝓩; _⁻¹; 𝑖𝑑; _≈_)
 
 
 module overture.inverses where
@@ -44,9 +48,9 @@ module _ {A : Type 𝓤 }{B : Type 𝓦 } where
 
 module _ {A : Type 𝓤 }{B : A → Type 𝓦 } where
 
- data DepImage_∋_ (f : (a : A) → B a) : Σ[ a ꞉ A ] B a → Type (𝓤 ⊔ 𝓦) where
+ data DepImage_∋_ (f : (a : A) → B a) : Σ[ a ∈ A ] B a → Type (𝓤 ⊔ 𝓦) where
   dim : (x : A) → DepImage f ∋ (x , f x)
-  deq : ((a , b) : Σ[ a ꞉ A ] B a) → b ≡ f a → DepImage f ∋ (a , b)
+  deq : ((a , b) : Σ[ a ∈ A ] B a) → b ≡ f a → DepImage f ∋ (a , b)
 
 
  DepImageIsImage : (f : (a : A) → B a)(a : A)(b : B a) → b ≡ f a → DepImage f ∋ (a , b)
@@ -128,22 +132,22 @@ module _ {A : Type 𝓤}{B : Type 𝓦} where
  IsInjective f = ∀ {x y} → f x ≡ f y → x ≡ y
 
  Injective : Type (𝓤 ⊔ 𝓦)
- Injective = Σ[ f ꞉ (A → B) ] IsInjective f
+ Injective = Σ[ f ∈ (A → B) ] IsInjective f
 
  Range : (f : A → B) → Pred B (𝓤 ⊔ 𝓦)
  Range f b = ∃[ a ] f a ≡ b
 
- data range (f : A → B) : Type (𝓤 ⊔ 𝓦)
-  where
-  rim : (x : A) → range f
-  req : (b : B) → ∃[ a ] f a ≡ b → range f
+ -- data range (f : A → B) : Type (𝓤 ⊔ 𝓦)
+ --  where
+ --  rim : (x : A) → range f
+ --  req : (b : B) → ∃[ a ∈ A ] f a ≡ b → range f
 
- Image→Range : (f : A → B)(b : B) → Image f ∋ b → b ∈ Range f
- Image→Range f .(f x) (im x) = x , refl
- Image→Range f b (eq .b a x) = a , (x ⁻¹)
+ -- Image→Range : (f : A → B)(b : B) → Image f ∋ b → b ∈ Range f
+ -- Image→Range f .(f x) (im x) = x , refl
+ -- Image→Range f b (eq .b a x) = a , (x ⁻¹)
 
- Range→Image : (f : A → B)(b : B) → b ∈ Range f → Image f ∋ b
- Range→Image f b ranfb = eq b (fst ranfb) (snd ranfb ⁻¹)
+ -- Range→Image : (f : A → B)(b : B) → b ∈ Range f → Image f ∋ b
+ -- Range→Image f b ranfb = eq b (fst ranfb) (snd ranfb ⁻¹)
 
  data Option {𝓤 : Level}(A : Type 𝓤) : Type 𝓤 where
   some : A → Option A
@@ -192,7 +196,7 @@ module _ {𝓤 𝓦 : Level}{A : Type 𝓤}{B : Type 𝓦} where
  IsSurjective f = ∀ y → Image f ∋ y
 
  Surjective : Type (𝓤 ⊔ 𝓦)
- Surjective = Σ[ f ꞉ (A → B) ] IsSurjective f
+ Surjective = Σ[ f ∈ (A → B) ] IsSurjective f
 
 \end{code}
 
@@ -220,7 +224,7 @@ module _ {𝓤 𝓦 : Level}{A : Type 𝓤}{B : Type 𝓦} where
  IsBijective f = IsInjective f × IsSurjective f
 
  Bijective : Type (𝓤 ⊔ 𝓦)
- Bijective = Σ[ f ꞉ (A → B) ] IsBijective f
+ Bijective = Σ[ f ∈ (A → B) ] IsBijective f
 
 \end{code}
 
@@ -229,7 +233,7 @@ With the next definition we represent the inverse of a bijective function.
 \begin{code}
 
  BijInv : (f : A → B) → IsBijective f → B → A
- BijInv f fb b = Inv f {b} (∥ fb ∥ b)
+ BijInv f fb b = Inv f {b} ((snd fb) b)
 
 \end{code}
 
@@ -269,7 +273,7 @@ module _ {𝓤 𝓦 : Level}{A : Type 𝓤}{B : Type 𝓦} where
  --      𝑖𝑑 A x ∎
 
  InvIsRInv≈ : (f : A → B)(fb : IsBijective f) → f ∘ (BijInv f fb) ≈ 𝑖𝑑 B
- InvIsRInv≈ f fb = λ x → InvIsInv f (∥ fb ∥ x)
+ InvIsRInv≈ f fb = λ x → InvIsInv f ((snd fb) x)
 
 \end{code}
 
@@ -291,3 +295,36 @@ module _ {𝓤 𝓦 : Level}{A : Type 𝓤}{B : Type 𝓦} where
 iLinv : (f : A → B) → IsInjective f → (b : B) → Image f ∋ b → A
 iLinv f finj = λ b imfb → inv f b imfb -->
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- open import Agda.Builtin.Equality using (_≡_; refl)
+-- open import Data.Product using (_,_; Σ; _×_; ∃; ∃-syntax)
+-- open import Function.Base  using (_∘_; id)
+-- open import Relation.Binary.PropositionalEquality.Core using (cong; cong-app)
+-- open import Cubical.Foundations.Equiv
+-- open import Cubical.Foundations.Equiv.HalfAdjoint
+-- open import Cubical.Foundations.HLevels
+-- open import Cubical.Foundations.Isomorphism
+-- open import Cubical.Foundations.SIP

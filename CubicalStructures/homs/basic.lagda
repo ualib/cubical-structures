@@ -10,19 +10,26 @@ author: William DeMeo
 {-# OPTIONS --without-K --exact-split --safe --cubical #-}
 
 -- Imports from the Agda (Builtin) and the Agda Standard Library
-open import Agda.Builtin.Equality using (_≡_; refl)
+open import Agda.Primitive using (_⊔_; lsuc)
 open import Axiom.Extensionality.Propositional renaming (Extensionality to funext)
-open import Data.Product using (_,_; Σ) -- ; _×_)
+
+
+open import Cubical.Core.Primitives using (_≡_; Type; Level; _,_; Σ-syntax;  i0; i1; fst; snd)
+open import Cubical.Foundations.Prelude using (refl; sym; _∙_; funExt; cong; _∎; _≡⟨_⟩_)
+open import Cubical.Foundations.Function using (_∘_)
 open import Cubical.Data.Sigma.Base using (_×_)
-open import Function.Base  using (_∘_; id)
-open import Level renaming (suc to lsuc; zero to lzero)
-open import Relation.Binary using (Rel; IsEquivalence)
-open import Relation.Binary.PropositionalEquality.Core using (sym; trans; cong)
--- open import Cubical.Foundations.Prelude using (funExt; i0; i1; _≡_; refl)
+
+
+-- open import Relation.Binary using (Rel; IsEquivalence)
+-- open import Relation.Binary.PropositionalEquality.Core using (trans)
+
+
+
+
 
 -- Imports from the Agda Universal Algebra Library
 open import structures.basic
-open import overture.preliminaries using (Type; 𝓞; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; Π; -Π; -Σ; _≡⟨_⟩_; _∎; _⁻¹; ∣_∣; ∥_∥; fst; _∙_; snd)
+open import overture.preliminaries using (𝓞; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; Π; -Π; _⁻¹; id)
 open import overture.inverses using (IsInjective; IsSurjective)
 open import relations.discrete using (ker; ker') -- 𝟎; _|:_)
 
@@ -31,43 +38,43 @@ module homs.basic {𝑅 : Signature}{𝐹 : Signature} where
 
 module _ {α β : Level} (𝑨 : Structure α 𝑅 𝐹)(𝑩 : Structure β 𝑅 𝐹) where
 
- comp-rel : ∣ 𝑅 ∣ → (∣ 𝑨 ∣ → ∣ 𝑩 ∣) → Type (ℓ₁ ⊔ α)
+ comp-rel : (fst 𝑅) → ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α)
  comp-rel R h = ∀ a → ((R ʳ 𝑨) a) ≡ (R ʳ 𝑩) (h ∘ a)
 
- is-hom-rel : (∣ 𝑨 ∣ → ∣ 𝑩 ∣) → Type (ℓ₁ ⊔ α)
+ is-hom-rel : ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α)
  is-hom-rel h = ∀ R →  comp-rel R h
 
- comp-op : ∣ 𝐹 ∣ → (∣ 𝑨 ∣ → ∣ 𝑩 ∣) → Type (α ⊔ β)
+ comp-op : (fst 𝐹) → ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β)
  comp-op f h = ∀ a → h ((f ᵒ 𝑨) a) ≡ (f ᵒ 𝑩) (h ∘ a)
 
- is-hom-op : (∣ 𝑨 ∣ → ∣ 𝑩 ∣) → Type (α ⊔ β)
+ is-hom-op : ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β)
  is-hom-op h = ∀ f → comp-op f h
 
- is-hom : (∣ 𝑨 ∣ → ∣ 𝑩 ∣) → Type (ℓ₁ ⊔ α ⊔ β)
+ is-hom : ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α ⊔ β)
  is-hom h = is-hom-rel h × is-hom-op h
 
  hom : Type (ℓ₁ ⊔ α ⊔ β)
- hom = Σ[ h ꞉ (∣ 𝑨 ∣ → ∣ 𝑩 ∣) ] is-hom h
+ hom = Σ[ h ∈ ((fst 𝑨) → (fst 𝑩)) ] is-hom h
 
 module _ {α β γ : Level} (𝑨 : Structure α 𝑅 𝐹){𝑩 : Structure β 𝑅 𝐹}(𝑪 : Structure γ 𝑅 𝐹) where
 
- ∘-is-hom-rel : {f : ∣ 𝑨 ∣ → ∣ 𝑩 ∣}{g : ∣ 𝑩 ∣ → ∣ 𝑪 ∣}
+ ∘-is-hom-rel : {f : (fst 𝑨) → (fst 𝑩)}{g : (fst 𝑩) → (fst 𝑪)}
   →             is-hom-rel 𝑨 𝑩 f → is-hom-rel 𝑩 𝑪 g → is-hom-rel 𝑨 𝑪 (g ∘ f)
  ∘-is-hom-rel {f}{g} fhr ghr R a = fhr R a ∙ ghr R (f ∘ a)
 
- ∘-is-hom-op : {f : ∣ 𝑨 ∣ → ∣ 𝑩 ∣}{g : ∣ 𝑩 ∣ → ∣ 𝑪 ∣}
+ ∘-is-hom-op : {f : (fst 𝑨) → (fst 𝑩)}{g : (fst 𝑩) → (fst 𝑪)}
   →            is-hom-op 𝑨 𝑩 f → is-hom-op 𝑩 𝑪 g → is-hom-op 𝑨 𝑪 (g ∘ f)
  ∘-is-hom-op {f}{g} fho gho 𝑓 a = cong g (fho 𝑓 a) ∙ gho 𝑓 (f ∘ a)
 
- ∘-is-hom : {f : ∣ 𝑨 ∣ → ∣ 𝑩 ∣}{g : ∣ 𝑩 ∣ → ∣ 𝑪 ∣}
+ ∘-is-hom : {f : (fst 𝑨) → (fst 𝑩)}{g : (fst 𝑩) → (fst 𝑪)}
   →         is-hom 𝑨 𝑩 f → is-hom 𝑩 𝑪 g → is-hom 𝑨 𝑪 (g ∘ f)
  ∘-is-hom {f} {g} fhro ghro = ihr , iho
   where
   ihr : is-hom-rel 𝑨 𝑪 (g ∘ f)
-  ihr = ∘-is-hom-rel {f}{g} ∣ fhro ∣ ∣ ghro ∣
+  ihr = ∘-is-hom-rel {f}{g} (fst fhro) (fst ghro)
 
   iho : is-hom-op 𝑨 𝑪 (g ∘ f)
-  iho = ∘-is-hom-op {f}{g} ∥ fhro ∥ ∥ ghro ∥
+  iho = ∘-is-hom-op {f}{g} (snd fhro) (snd ghro)
 
  ∘-hom : hom 𝑨 𝑩  →  hom 𝑩 𝑪  →  hom 𝑨 𝑪
  ∘-hom (f , fh) (g , gh) = g ∘ f , ∘-is-hom {f}{g} fh gh
@@ -78,23 +85,23 @@ module _ {α β γ : Level} (𝑨 : Structure α 𝑅 𝐹){𝑩 : Structure β 
 
 module _ {α β : Level} where
 
- is-mon : (𝑨 : Structure α 𝑅 𝐹)(𝑩 : Structure β 𝑅 𝐹) → (∣ 𝑨 ∣ → ∣ 𝑩 ∣) → Type (ℓ₁ ⊔ α ⊔ β)
+ is-mon : (𝑨 : Structure α 𝑅 𝐹)(𝑩 : Structure β 𝑅 𝐹) → ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α ⊔ β)
  is-mon 𝑨 𝑩 g = is-hom 𝑨 𝑩 g × IsInjective g
 
  mon : Structure α 𝑅 𝐹 → Structure β 𝑅 𝐹  → Type (ℓ₁ ⊔ α ⊔ β)
- mon 𝑨 𝑩 = Σ[ g ꞉ (∣ 𝑨 ∣ → ∣ 𝑩 ∣) ] is-mon 𝑨 𝑩 g
+ mon 𝑨 𝑩 = Σ[ g ∈ ((fst 𝑨) → (fst 𝑩)) ] is-mon 𝑨 𝑩 g
 
- is-epi : (𝑨 : Structure α 𝑅 𝐹)(𝑩 : Structure β 𝑅 𝐹) → (∣ 𝑨 ∣ → ∣ 𝑩 ∣) → Type (ℓ₁ ⊔ α ⊔ β)
+ is-epi : (𝑨 : Structure α 𝑅 𝐹)(𝑩 : Structure β 𝑅 𝐹) → ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α ⊔ β)
  is-epi 𝑨 𝑩 g = is-hom 𝑨 𝑩 g × IsSurjective g
 
  epi : Structure α 𝑅 𝐹 → Structure β 𝑅 𝐹  → Type (ℓ₁ ⊔ α ⊔ β)
- epi 𝑨 𝑩 = Σ[ g ꞉ (∣ 𝑨 ∣ → ∣ 𝑩 ∣) ] is-epi 𝑨 𝑩 g
+ epi 𝑨 𝑩 = Σ[ g ∈ ((fst 𝑨) → (fst 𝑩)) ] is-epi 𝑨 𝑩 g
 
  mon-to-hom : (𝑨 : Structure α 𝑅 𝐹){𝑩 : Structure β 𝑅 𝐹} → mon 𝑨 𝑩 → hom 𝑨 𝑩
- mon-to-hom _ ϕ = ∣ ϕ ∣ , fst ∥ ϕ ∥
+ mon-to-hom _ ϕ = (fst ϕ) , fst (snd ϕ )
 
  epi-to-hom :  {𝑨 : Structure α 𝑅 𝐹}(𝑩 : Structure β 𝑅 𝐹) → epi 𝑨 𝑩 → hom 𝑨 𝑩
- epi-to-hom _ ϕ = ∣ ϕ ∣ , fst ∥ ϕ ∥
+ epi-to-hom _ ϕ = (fst ϕ) , fst (snd ϕ)
 
 \end{code}
 
@@ -113,27 +120,15 @@ The kernel of a homomorphism is a congruence relation and conversely for every c
 
 \begin{code}
 
-module _ {α β : Level}{𝑨 : Structure α 𝑅 𝐹} where
- homker-comp : funext ℓ₀ β → {𝑩 : Structure β 𝑅 𝐹}(h : hom 𝑨 𝑩) → compatible 𝑨 (ker ∣ h ∣)
- homker-comp fe {𝑩} h f {u}{v} kuv = ∣ h ∣((f ᵒ 𝑨) u)   ≡⟨ ∥ snd h ∥ f u ⟩
-                                  (f ᵒ 𝑩)(∣ h ∣ ∘ u) ≡⟨ cong (f ᵒ 𝑩) goal ⟩
-                                  (f ᵒ 𝑩)(∣ h ∣ ∘ v) ≡⟨ (∥ snd h ∥ f v)⁻¹ ⟩
-                                  ∣ h ∣((f ᵒ 𝑨) v)   ∎
-  where
-  goal : (λ x → ∣ h ∣ (u x)) ≡ (λ x → ∣ h ∣ (v x))
-  goal = fe (λ x → kuv x)
-  -- k : ∀ x → ∣ h ∣ (u x) ≡ ∣ h ∣ (v x)
-  -- k = kuv
-  -- k' : ({x : A} → PathP (B x) (f {x}) (g {x}))
-  -- goal : (λ x → ∣ h ∣ (u x)) ≡ (λ x → ∣ h ∣ (v x))
-  -- goal = funExt {f = (λ x → (∣ h ∣ (u x) i0))}{g = (λ x → ∣ h ∣ (v x) i1)} kuv
 
--- Next: try to use the following (cubical) funExt *theorem* instead of funext axiom.
--- funExt : {B : A → I → Type ℓ'}
---   {f : (x : A) → B x i0} {g : (x : A) → B x i1}
---   → ((x : A) → PathP (B x) (f x) (g x))
---   → PathP (λ i → (x : A) → B x i) f g
--- funExt p i x = p x i
+-- Our first use of the function extensionality THEOREM of Cubical Agda!
+
+module _ {α β : Level}{𝑨 : Structure α 𝑅 𝐹} where
+ homker-comp : funext ℓ₀ β → {𝑩 : Structure β 𝑅 𝐹}(h : hom 𝑨 𝑩) → compatible 𝑨 (ker (fst h))
+ homker-comp fe {𝑩} h f {u}{v} kuv = ((fst h) ((f ᵒ 𝑨) u))  ≡⟨(snd (snd h)) f u ⟩
+                                     ((f ᵒ 𝑩)((fst h) ∘ u)) ≡⟨ cong (f ᵒ 𝑩) (funExt kuv)⟩ -- It works! Woohoo!!
+                                     ((f ᵒ 𝑩)((fst h) ∘ v)) ≡⟨((snd (snd h)) f v)⁻¹ ⟩
+                                     ((fst h)((f ᵒ 𝑨) v))   ∎
 
 
 \end{code}

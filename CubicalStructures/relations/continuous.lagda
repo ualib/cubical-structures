@@ -9,10 +9,16 @@ author: William DeMeo
 
 {-# OPTIONS --without-K --exact-split --safe --cubical #-}
 
-open import Agda.Primitive using (_⊔_; lzero; lsuc; Level)
-open import Agda.Builtin.Equality renaming (_≡_ to infix 0 _≡_)
 
-open import overture.preliminaries using (Type; 𝓤; 𝓥; 𝓦)
+-- Imports from the Agda (Builtin) and the Agda Standard Library
+open import Agda.Primitive using (_⊔_; lsuc)
+
+-- Imports from Cubical Agda
+open import Cubical.Core.Primitives using (Type; Level)
+open import Cubical.Foundations.Prelude using (_≡_; refl)
+
+open import overture.preliminaries using (𝓤; 𝓥; 𝓦)
+
 open import relations.discrete using (Op)
 
 
@@ -48,4 +54,7 @@ module _ {I J : Type 𝓥} {𝒜 : I → Type 𝓤} where
 {% include UALib.Links.md %}
 
 
+
+-- open import Agda.Primitive using (_⊔_; lzero; lsuc; Level)
+-- open import Agda.Builtin.Equality renaming (_≡_ to infix 0 _≡_)
 

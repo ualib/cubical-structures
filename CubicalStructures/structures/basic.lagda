@@ -8,25 +8,19 @@ author: William DeMeo
 \begin{code}
 
 {-# OPTIONS --without-K --exact-split --safe --cubical #-}
-open import Agda.Builtin.Equality using (_≡_)
-open import Agda.Primitive using (_⊔_; lzero; lsuc; Level)
--- open import Agda.Builtin.Bool
-open import Agda.Builtin.Unit using (⊤)
-open import Relation.Binary.Core renaming (Rel to BinRel) using (_⇒_;_=[_]⇒_)
-open import Data.Empty using (⊥)
-open import Data.Product using (_,_; Σ; Σ-syntax; _×_)
-open import Data.Sum.Base renaming (_⊎_ to _+_) using ()
 
-open import overture.preliminaries using (Type; Type₀; -Σ; ∣_∣; ∥_∥; snd; fst) -- ; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; -Σ)
-
--- open import relations.discrete using (_|:_)
+open import Agda.Primitive using (_⊔_)
+open import Cubical.Core.Primitives using (_≡_; Type; Level; _,_; Σ-syntax; ℓ-zero; ℓ-suc; fst; snd)
+open import Cubical.Data.Sigma using (_,_; _×_)
+open import Cubical.Relation.Binary.Base renaming (Rel to REL) using ()
+open import relations.discrete renaming (Rel to BinRel) using (_|:_)
 
 module structures.basic where
 
 -- Aliases.
 ℓ₀ ℓ₁ : Level
-ℓ₀ = lzero
-ℓ₁ = lsuc lzero
+ℓ₀ = ℓ-zero
+ℓ₁ = ℓ-suc ℓ-zero
 
 
 -- All arity types will have universe level 0.
@@ -49,29 +43,29 @@ Rel a B = (a → B) → Type ℓ₀
 
 
 
-Signature : Type (lsuc lzero)
-Signature = Σ[ F ꞉ Type ℓ₀ ] (F → Arity)
+Signature : Type ℓ₁
+Signature = Σ[ F ∈ Type ℓ₀ ] (F → Arity)
 
 
 -- Inhabitants of Sigature type are triples (s , k , a), where s is the symbol, k is the symbol kind (i.e., relation or operation), and a is the arity.
 
 
-open _+_
+-- open _+_
 
 ℛ : {β : Level} → Signature → Type β → Type (β ⊔ ℓ₁)
-ℛ 𝑆 B = ∀ (r : ∣ 𝑆 ∣) → Rel (∥ 𝑆 ∥ r) B
+ℛ 𝑆 B = ∀ (r : fst 𝑆) → Rel ((snd 𝑆) r) B
 
 ℱ : {β : Level} → Signature → Type β → Type β
-ℱ 𝑆 B = ∀ (f : ∣ 𝑆 ∣) → Op (∥ 𝑆 ∥ f) B
+ℱ 𝑆 B = ∀ (f : fst 𝑆) → Op ((snd 𝑆) f) B
 
-Structure : (β : Level) → (𝑅 𝐹 : Signature) → Type (lsuc β)
-Structure β 𝑅 𝐹 = Σ[ B ꞉ Type β ] (ℛ 𝑅 B × ℱ 𝐹 B)
+Structure : (β : Level) → (𝑅 𝐹 : Signature) → Type (ℓ-suc β)
+Structure β 𝑅 𝐹 = Σ[ B ∈ Type β ] (ℛ 𝑅 B × ℱ 𝐹 B)
 
-RStructure : (β : Level) → Signature → Type (lsuc β)
-RStructure β 𝑅 = Σ[ B ꞉ Type β ] ℛ 𝑅 B
+RStructure : (β : Level) → Signature → Type (ℓ-suc β)
+RStructure β 𝑅 = Σ[ B ∈ Type β ] ℛ 𝑅 B
 
-AStructure : (β : Level) → Signature → Type (lsuc β)
-AStructure β 𝐹 = Σ[ B ꞉ Type β ] ℱ 𝐹 B
+AStructure : (β : Level) → Signature → Type (ℓ-suc β)
+AStructure β 𝐹 = Σ[ B ∈ Type β ] ℱ 𝐹 B
 
 -- Reducts
 Structure→AStructure : {β : Level} {𝑅 𝐹 : Signature} → Structure β 𝑅 𝐹 → AStructure β 𝐹
@@ -82,10 +76,10 @@ Structure→RStructure (B , (ℛ , ℱ)) = B , ℛ
 
 
 module _ {β : Level}{𝑅 𝐹 : Signature}  where
-  rel : ((B , (ℛ , ℱ)) : Structure β 𝑅 𝐹) → (r : ∣ 𝑅 ∣) → Rel (∥ 𝑅 ∥ r) B
+  rel : ((B , (ℛ , ℱ)) : Structure β 𝑅 𝐹) → (r : fst 𝑅) → Rel ((snd 𝑅) r) B
   rel (_ , (ℛ , _)) = ℛ
 
-  op : ((B , (ℛ , ℱ)) : Structure β 𝑅 𝐹) → (f : ∣ 𝐹 ∣) → Op (∥ 𝐹 ∥ f) B
+  op : ((B , (ℛ , ℱ)) : Structure β 𝑅 𝐹) → (f : fst 𝐹) → Op ((snd 𝐹) f) B
   op (_ , (_ , ℱ)) = ℱ
 
 {- Let 𝑅 and 𝐹 be signatures and let ℬ = (B , (ℛ , ℱ)) be an (𝑅, 𝐹)-structure.
@@ -94,18 +88,22 @@ module _ {β : Level}{𝑅 𝐹 : Signature}  where
    of `f` in `ℬ`. -}
 
   -- Syntax for interpretation of relations and operations.
-  _⟦_⟧ᵣ : (ℬ : Structure β 𝑅 _)(R : ∣ 𝑅 ∣) → Rel (∥ 𝑅 ∥ R ) ∣ ℬ ∣
+  _⟦_⟧ᵣ : (ℬ : Structure β 𝑅 _)(R : fst 𝑅) → Rel ((snd 𝑅) R) (fst ℬ)
   ℬ ⟦ R ⟧ᵣ = λ b → (rel ℬ R) b
 
-  _⟦_⟧ₒ : (ℬ : Structure β _ 𝐹)(𝑓 : ∣ 𝐹 ∣) → Op (∥ 𝐹 ∥ 𝑓 ) ∣ ℬ ∣
+  _⟦_⟧ₒ : (ℬ : Structure β _ 𝐹)(𝑓 : fst 𝐹) → Op ((snd 𝐹) 𝑓) (fst ℬ)
   ℬ ⟦ 𝑓 ⟧ₒ = λ b → (op ℬ 𝑓) b
 
-  _ʳ_ : (R : ∣ 𝑅 ∣)(ℬ : Structure β 𝑅 _) → Rel (∥ 𝑅 ∥ R ) ∣ ℬ ∣
+  _ʳ_ : (R : fst 𝑅)(ℬ : Structure β 𝑅 _) → Rel ((snd 𝑅) R) (fst ℬ)
   R ʳ ℬ = λ b → (rel ℬ R) b
 
-  _ᵒ_ : (𝑓 : ∣ 𝐹 ∣)(ℬ : Structure β _ 𝐹) → Op (∥ 𝐹 ∥ 𝑓 ) ∣ ℬ ∣
+  _ᵒ_ : (𝑓 : fst 𝐹)(ℬ : Structure β _ 𝐹) → Op ((snd 𝐹) 𝑓) (fst ℬ)
   𝑓 ᵒ ℬ = λ b → (op ℬ 𝑓) b
 
+
+
+  compatible : {ℓ : Level}(𝑩 : Structure β 𝑅 𝐹) → BinRel (fst 𝑩) ℓ  → Type (β ⊔ ℓ)
+  compatible 𝑩 r = ∀ 𝑓 → (𝑓 ᵒ 𝑩) |: r
 
 
 \end{code}
@@ -113,7 +111,33 @@ module _ {β : Level}{𝑅 𝐹 : Signature}  where
 
 
 
-#### <a id="compatibility-of-binary-relations">Compatibility of binary relations</a>
+
+compatible' : {β ℓ : Level}{𝑅 𝐹 : Signature}(𝑩 : Structure β 𝑅 𝐹)
+ → ((I : Arity) → BinRel (I → ∣ 𝑩 ∣) ℓ)  → Type (β ⊔ ℓ)
+compatible' {𝐹 = 𝐹} 𝑩 r = ∀ (𝑓 : ∣ 𝐹 ∣)(u v : ∥ 𝐹 ∥ 𝑓 → ∣ 𝑩 ∣) → (r (∥ 𝐹 ∥ 𝑓)) u v →  (r ⊤ ) ((𝑓 ᵒ 𝑩) u) ((𝑓 ᵒ 𝑩) v)
+
+
+
+
+
+
+
+--------------------------------------
+
+
+{% include cubical-algebras.links.md %}
+
+
+
+
+
+
+
+
+
+
+<!--  NO LONGER USED ---------------------------------------------------
+
 
 We now define the function `compatible` so that, if `𝑩` denotes a structure and
 `r` a binary relation, then `compatible 𝑩 r` will represent the assertion that
@@ -126,23 +150,22 @@ We now define the function `compatible` so that, if `𝑩` denotes a structure a
 
 The formal definition is immediate since all the work is done by the relation `|:`, which we defined above (see [Relations.Discrete][]).
 
-\begin{code}
-
 eval-rel : {β ℓ : Level}{B : Type β}{I : Arity} → BinRel B ℓ → BinRel (I → B) ℓ
 eval-rel r u v = ∀ i → r (u i) (v i)
 
 _|:_ : {β ℓ : Level}{B : Type β}{I : Arity} → Op I B → BinRel B ℓ → Type (β ⊔ ℓ)
 f |: R  = (eval-rel R) =[ f ]⇒ R
 
-
-compatible : {β ℓ : Level}{𝑅 𝐹 : Signature}(𝑩 : Structure β 𝑅 𝐹) → BinRel ∣ 𝑩 ∣ ℓ  → Type (β ⊔ ℓ)
-compatible 𝑩 r = ∀ 𝑓 → (𝑓 ᵒ 𝑩) |: r
-
 \end{code}
 
-compatible' : {β ℓ : Level}{𝑅 𝐹 : Signature}(𝑩 : Structure β 𝑅 𝐹)
- → ((I : Arity) → BinRel (I → ∣ 𝑩 ∣) ℓ)  → Type (β ⊔ ℓ)
-compatible' {𝐹 = 𝐹} 𝑩 r = ∀ (𝑓 : ∣ 𝐹 ∣)(u v : ∥ 𝐹 ∥ 𝑓 → ∣ 𝑩 ∣) → (r (∥ 𝐹 ∥ 𝑓)) u v →  (r ⊤ ) ((𝑓 ᵒ 𝑩) u) ((𝑓 ᵒ 𝑩) v)
+
+
+
+
+
+
+
+
 
 
 
@@ -192,12 +215,23 @@ compatible' {𝐹 = 𝐹} 𝑩 r = ∀ (𝑓 : ∣ 𝐹 ∣)(u v : ∥ 𝐹 ∥ 
 
 
 
+-- open import Cubical.Foundations.Equiv
+-- open import Cubical.Foundations.Equiv.HalfAdjoint
+-- open import Cubical.Foundations.HLevels
+-- open import Cubical.Foundations.Isomorphism
+-- open import Cubical.Foundations.Function
+-- open import Cubical.Foundations.SIP
+-- open import Cubical.Displayed.Base
+-- open import Cubical.Displayed.Auto
+-- open import Cubical.Displayed.Record
+-- open import Cubical.Displayed.Universe
+-- -- open import Agda.Builtin.Bool
+-- open import Agda.Builtin.Unit using (⊤)
+-- open import Data.Empty using (⊥)
+-- open import Data.Product using (_,_; Σ; Σ-syntax; _×_)
+-- open import Data.Sum.Base renaming (_⊎_ to _+_) using ()
+-- open import overture.preliminaries using (∣_∣; ∥_∥) -- ; snd; fst) -- ; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; -Σ) -- Type; Type₀; -Σ; 
+-- open import relations.discrete using (_|:_)
 
-\end{code}
 
-
-
---------------------------------------
-
-
-{% include cubical-algebras.links.md %}
+----------------------------------------------------------------------- -->
