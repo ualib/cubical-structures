@@ -47,21 +47,19 @@ Signature = Σ[ F ∈ Type ℓ₀ ] (F → Arity)
 
 -- Inhabitants of Signature type are triples (s , k , a), where s is the symbol, k is the symbol kind (i.e., relation or operation), and a is the arity.
 
-
-ℛ : {ρ β : Level} → Signature → Type β → Type (lsuc ρ ⊔ β)
-ℛ {ρ} 𝑆 B = ∀ (r : ∣ 𝑆 ∣) → Rel{ρ} (∥ 𝑆 ∥ r) B
-
-ℱ : {β : Level} → Signature → Type β → Type β
-ℱ 𝑆 B = ∀ (f : ∣ 𝑆 ∣) → Op (∥ 𝑆 ∥ f) B
-
 Structure : {ρ : Level}(β : Level)(𝑅 𝐹 : Signature) → Type (lsuc (ρ ⊔ β))
-Structure {ρ} β 𝑅 𝐹 = Σ[ B ∈ Type β ] (ℛ{ρ} 𝑅 B × ℱ 𝐹 B)
+Structure {ρ} β 𝑅 𝐹 =
+ Σ[ B ∈ Type β ]                       -- the domain of the structure is B
+  ( (∀(r : ∣ 𝑅 ∣) → Rel{ρ}(∥ 𝑅 ∥ r) B) -- the interpretations of the relation symbols
+  × (∀(f : ∣ 𝐹 ∣) → Op(∥ 𝐹 ∥ f) B)     -- the interpretations of the operation symbols
+  )
+
 
 RStructure : {ρ : Level}(β : Level) → Signature → Type (lsuc (ρ ⊔ β))
-RStructure {ρ} β 𝑅 = Σ[ B ∈ Type β ] ℛ {ρ} 𝑅 B
+RStructure {ρ} β 𝑅 = Σ[ B ∈ Type β ] ∀(r : ∣ 𝑅 ∣) → Rel{ρ}(∥ 𝑅 ∥ r) B
 
 AStructure : (β : Level) → Signature → Type (lsuc β)
-AStructure β 𝐹 = Σ[ B ∈ Type β ] ℱ 𝐹 B
+AStructure β 𝐹 = Σ[ B ∈ Type β ] ∀ (f : ∣ 𝐹 ∣) → Op (∥ 𝐹 ∥ f) B
 
 -- Reducts
 Structure→AStructure : {ρ β : Level} {𝑅 𝐹 : Signature} → Structure {ρ} β 𝑅 𝐹 → AStructure β 𝐹
@@ -103,15 +101,15 @@ module _ {ρ β : Level}{𝑅 𝐹 : Signature}  where
 
 -- Alternative development using records
 
-record Sig : Type ℓ₁ where
+record signature : Type ℓ₁ where
  field
   symbol : Type ℓ₀
   arity : symbol → Arity
 
-open Sig
+open signature
 
 
-record structure {ρ : Level}(β : Level)(𝑅 𝐹 : Sig) : Type (lsuc (ρ ⊔ β)) where
+record structure {ρ : Level}(β : Level)(𝑅 𝐹 : signature) : Type (lsuc (ρ ⊔ β)) where
  field
   univ : Type β
   relation : ∀ (r : symbol 𝑅) → Rel{ρ}(arity 𝑅 r) univ  -- interpretations of relations
