@@ -35,12 +35,12 @@ open import relations.discrete using (ker; ker') -- 𝟎; _|:_)
 module homs.basic {𝑅 : Signature}{𝐹 : Signature} where
 
 
-module _ {α β : Level} (𝑨 : Structure α 𝑅 𝐹)(𝑩 : Structure β 𝑅 𝐹) where
+module _ {α β : Level} (𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹 {β}) where
 
- comp-rel : (fst 𝑅) → ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α)
- comp-rel R h = ∀ a → ((R ʳ 𝑨) a) ≡ (R ʳ 𝑩) (h ∘ a)
+ comp-rel : (fst 𝑅) → ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β) -- (ℓ₁ ⊔ α)
+ comp-rel R h = ∀ a → ((R ʳ 𝑨) a) → ((R ʳ 𝑩) (h ∘ a))
 
- is-hom-rel : ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α)
+ is-hom-rel : ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β)
  is-hom-rel h = ∀ R →  comp-rel R h
 
  comp-op : (fst 𝐹) → ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β)
@@ -49,17 +49,17 @@ module _ {α β : Level} (𝑨 : Structure α 𝑅 𝐹)(𝑩 : Structure β �
  is-hom-op : ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β)
  is-hom-op h = ∀ f → comp-op f h
 
- is-hom : ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α ⊔ β)
+ is-hom : ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β)
  is-hom h = is-hom-rel h × is-hom-op h
 
- hom : Type (ℓ₁ ⊔ α ⊔ β)
+ hom : Type (α ⊔ β)
  hom = Σ[ h ∈ ((fst 𝑨) → (fst 𝑩)) ] is-hom h
 
-module _ {α β γ : Level} (𝑨 : Structure α 𝑅 𝐹){𝑩 : Structure β 𝑅 𝐹}(𝑪 : Structure γ 𝑅 𝐹) where
+module _ {α β γ : Level}(𝑨 : Structure 𝑅 𝐹 {α}){𝑩 : Structure 𝑅 𝐹 {β}}(𝑪 : Structure 𝑅 𝐹 {γ}) where
 
  ∘-is-hom-rel : {f : (fst 𝑨) → (fst 𝑩)}{g : (fst 𝑩) → (fst 𝑪)}
   →             is-hom-rel 𝑨 𝑩 f → is-hom-rel 𝑩 𝑪 g → is-hom-rel 𝑨 𝑪 (g ∘ f)
- ∘-is-hom-rel {f}{g} fhr ghr R a = fhr R a ∙ ghr R (f ∘ a)
+ ∘-is-hom-rel {f}{g} fhr ghr R a = λ z → ghr R (λ z₁ → f (a z₁)) (fhr R a z)
 
  ∘-is-hom-op : {f : (fst 𝑨) → (fst 𝑩)}{g : (fst 𝑩) → (fst 𝑪)}
   →            is-hom-op 𝑨 𝑩 f → is-hom-op 𝑩 𝑪 g → is-hom-op 𝑨 𝑪 (g ∘ f)
@@ -79,27 +79,29 @@ module _ {α β γ : Level} (𝑨 : Structure α 𝑅 𝐹){𝑩 : Structure β 
  ∘-hom (f , fh) (g , gh) = g ∘ f , ∘-is-hom {f}{g} fh gh
 
 
-𝒾𝒹 : {α : Level}(𝑨 : Structure α 𝑅 𝐹) → hom 𝑨 𝑨
-𝒾𝒹 _ = id , (λ R a → refl) , (λ f a → refl)
+𝒾𝒹 : {α : Level}(𝑨 : Structure 𝑅 𝐹 {α}) → hom 𝑨 𝑨
+𝒾𝒹 _ = id , (λ R a z → z)  , (λ f a → refl)  -- (λ R a → refl)
+
+module _ {α β : Level}(𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹{β}) where
+
+ is-mon : ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β)
+ is-mon g = is-hom 𝑨 𝑩 g × IsInjective g
+
+ mon : Type (α ⊔ β)
+ mon = Σ[ g ∈ ((fst 𝑨) → (fst 𝑩)) ] is-mon g
+
+ is-epi : ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β)
+ is-epi g = is-hom 𝑨 𝑩 g × IsSurjective g
+
+ epi : Type (α ⊔ β)
+ epi = Σ[ g ∈ ((fst 𝑨) → (fst 𝑩)) ] is-epi g
 
 module _ {α β : Level} where
 
- is-mon : (𝑨 : Structure α 𝑅 𝐹)(𝑩 : Structure β 𝑅 𝐹) → ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α ⊔ β)
- is-mon 𝑨 𝑩 g = is-hom 𝑨 𝑩 g × IsInjective g
-
- mon : Structure α 𝑅 𝐹 → Structure β 𝑅 𝐹  → Type (ℓ₁ ⊔ α ⊔ β)
- mon 𝑨 𝑩 = Σ[ g ∈ ((fst 𝑨) → (fst 𝑩)) ] is-mon 𝑨 𝑩 g
-
- is-epi : (𝑨 : Structure α 𝑅 𝐹)(𝑩 : Structure β 𝑅 𝐹) → ((fst 𝑨) → (fst 𝑩)) → Type (ℓ₁ ⊔ α ⊔ β)
- is-epi 𝑨 𝑩 g = is-hom 𝑨 𝑩 g × IsSurjective g
-
- epi : Structure α 𝑅 𝐹 → Structure β 𝑅 𝐹  → Type (ℓ₁ ⊔ α ⊔ β)
- epi 𝑨 𝑩 = Σ[ g ∈ ((fst 𝑨) → (fst 𝑩)) ] is-epi 𝑨 𝑩 g
-
- mon-to-hom : (𝑨 : Structure α 𝑅 𝐹){𝑩 : Structure β 𝑅 𝐹} → mon 𝑨 𝑩 → hom 𝑨 𝑩
+ mon-to-hom : (𝑨 : Structure 𝑅 𝐹{α}){𝑩 : Structure 𝑅 𝐹{β}} → mon 𝑨 𝑩 → hom 𝑨 𝑩
  mon-to-hom _ ϕ = (fst ϕ) , fst (snd ϕ )
 
- epi-to-hom :  {𝑨 : Structure α 𝑅 𝐹}(𝑩 : Structure β 𝑅 𝐹) → epi 𝑨 𝑩 → hom 𝑨 𝑩
+ epi-to-hom :  {𝑨 : Structure 𝑅 𝐹{α}}(𝑩 : Structure 𝑅 𝐹{β}) → epi 𝑨 𝑩 → hom 𝑨 𝑩
  epi-to-hom _ ϕ = (fst ϕ) , fst (snd ϕ)
 
 \end{code}
@@ -122,15 +124,15 @@ The kernel of a homomorphism is a congruence relation and conversely for every c
 
 -- Our first use of the function extensionality THEOREM of Cubical Agda!
 
-module _ {α β : Level}{𝑨 : Structure α 𝑅 𝐹} where
- homker-comp : {𝑩 : Structure β 𝑅 𝐹}(h : hom 𝑨 𝑩) → compatible 𝑨 (ker (fst h))
+module _ {α β : Level}{𝑨 : Structure 𝑅 𝐹 {α}} where
+ homker-comp : {𝑩 : Structure 𝑅 𝐹 {β}}(h : hom 𝑨 𝑩) → compatible 𝑨 (ker (fst h))
  homker-comp {𝑩} h f {u}{v} kuv = ((fst h) ((f ᵒ 𝑨) u))  ≡⟨(snd (snd h)) f u ⟩
                                    ((f ᵒ 𝑩)((fst h) ∘ u)) ≡⟨ cong (f ᵒ 𝑩) (funExt kuv)⟩
                                    ((f ᵒ 𝑩)((fst h) ∘ v)) ≡⟨((snd (snd h)) f v)⁻¹ ⟩
                                    ((fst h)((f ᵒ 𝑨) v))   ∎
 
 
- -- kercon : {𝑩 : Structure β 𝑅 𝐹} → hom 𝑨 𝑩 → Con{𝓤}{𝓦} 𝑨
+ -- kercon : {𝑩 : Structure 𝑅 𝐹 {β}} → hom 𝑨 𝑩 → Con{𝓤}{𝓦} 𝑨
  -- kercon {𝑩} h = ker ∣ h ∣ , mkcon (ker-IsEquivalence ∣ h ∣)(homker-comp wd {𝑩} h)
 
 \end{code}

@@ -28,9 +28,9 @@ open import relations.discrete using (ker)
 
 module structures.products  where
 
-module _ {𝑅 𝐹 : Signature}{ρ β ι : Level} where
+module _ {𝑅 𝐹 : Signature}{β ι : Level} where
 
- ⨅ : (ℑ : Type ι)(ℬ : ℑ → Structure {ρ} β 𝑅 𝐹) → Structure (β ⊔ ι) 𝑅 𝐹
+ ⨅ : (ℑ : Type ι)(ℬ : ℑ → Structure 𝑅 𝐹 {β}) → Structure 𝑅 𝐹
 
  ⨅ ℑ ℬ =
   Π[ 𝔦 ꞉ ℑ ] ∣ ℬ 𝔦 ∣ ,                     -- domain of the product structure
@@ -40,15 +40,15 @@ module _ {𝑅 𝐹 : Signature}{ρ β ι : Level} where
  -- Alternative notation for the domain of the product is `∀ 𝔦 → ∣ ℬ 𝔦 ∣`.
 
 
-module _ {𝑅 𝐹 : Signature}{ρ β : Level}{𝒦 : Pred (Structure {ρ} β 𝑅 𝐹) (lsuc β)} where
+module _ {𝑅 𝐹 : Signature}{β : Level}{𝒦 : Pred (Structure 𝑅 𝐹 {β}) (lsuc β)} where
 
- ℑ : Type (lsuc (ρ ⊔ β))
- ℑ = Σ[ 𝑨 ∈ Structure β 𝑅 𝐹 ] 𝑨 ∈ 𝒦
+ ℑ : Type (lsuc β)
+ ℑ = Σ[ 𝑨 ∈ Structure 𝑅 𝐹 ] 𝑨 ∈ 𝒦
 
- 𝔄 : ℑ → Structure β 𝑅 𝐹
+ 𝔄 : ℑ → Structure 𝑅 𝐹
  𝔄 𝔦 = ∣ 𝔦 ∣
 
- class-prod : Structure  (lsuc (ρ ⊔ β)) 𝑅 𝐹
+ class-prod : Structure  𝑅 𝐹
  class-prod = ⨅ ℑ 𝔄
 
 \end{code}
@@ -60,25 +60,25 @@ If `p : 𝑨 ∈ 𝒦`, we view the pair `(𝑨 , p) ∈ ℑ` as an *index* over
 
 \begin{code}
 
-module _ {𝑅 𝐹 : signature}{ρ β ι : Level} where
+module _ {𝑅 𝐹 : signature}{β ι : Level} where
  open structure
 
- ⨅' : (ℑ : Type ι)(ℬ : ℑ → structure {ρ} β 𝑅 𝐹) → structure (β ⊔ ι) 𝑅 𝐹
+ ⨅' : (ℑ : Type ι)(ℬ : ℑ → structure 𝑅 𝐹 {β}) → structure 𝑅 𝐹
  ⨅' ℑ ℬ = record
            { univ       = Π[ 𝔦 ꞉ ℑ ] univ (ℬ 𝔦)                       -- domain of the product structure
-           ; relation   = λ r 𝑎 → ∀ 𝔦 → relation (ℬ 𝔦) r (λ x → 𝑎 x 𝔦) -- interpretations of relations
-           ; operation  = λ f 𝑎 𝔦 → operation (ℬ 𝔦) f (λ x → 𝑎 x 𝔦)    -- interpretations of operations
+           ; rel   = λ r 𝑎 → ∀ 𝔦 → rel (ℬ 𝔦) r (λ x → 𝑎 x 𝔦) -- interpretations of relations
+           ; op  = λ f 𝑎 𝔦 → op (ℬ 𝔦) f (λ x → 𝑎 x 𝔦)    -- interpretations of operations
            }
 
-module _ {𝑅 𝐹 : signature}{ρ β ι : Level} {𝒦 : Pred (structure β 𝑅 𝐹) (lsuc β)} where
+module _ {𝑅 𝐹 : signature}{β ι : Level} {𝒦 : Pred (structure 𝑅 𝐹 {β}) (lsuc β)} where
 
-  ℑ' : Type (lsuc (ρ ⊔ β))
-  ℑ' = Σ[ 𝑨 ∈ structure {ρ} β 𝑅 𝐹 ] 𝑨 ∈ 𝒦
+  ℑ' : Type (lsuc β)
+  ℑ' = Σ[ 𝑨 ∈ structure 𝑅 𝐹 ] 𝑨 ∈ 𝒦
 
-  𝔄' : ℑ' → structure β 𝑅 𝐹
+  𝔄' : ℑ' → structure 𝑅 𝐹
   𝔄' 𝔦 = ∣ 𝔦 ∣
 
-  class-prod' : structure (lsuc (ρ ⊔  β)) 𝑅 𝐹
+  class-prod' : structure 𝑅 𝐹
   class-prod' = ⨅' ℑ' 𝔄'
 
 \end{code}
