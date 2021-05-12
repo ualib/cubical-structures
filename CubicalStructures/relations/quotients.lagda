@@ -15,11 +15,11 @@ This section presents the [Relations.Quotients][] module of the [Agda Universal 
 
 -- Imports from the Agda (Builtin) and the Agda Standard Library
 open import Agda.Primitive using (_⊔_; lsuc)
-open import Relation.Unary using (Pred; _∈_)
+open import Relation.Unary using (Pred; _∈_; _⊆_)
 open import Function.Base using (_on_)
 
 -- Imports from Cubical Agda
-open import Cubical.Core.Primitives using (_≡_; Type; Level; _,_; Σ-syntax)
+open import Cubical.Core.Primitives using (_≡_; Type; Level; _,_; Σ-syntax; Typeω)
 open import Cubical.Foundations.Prelude using (refl; sym; _∙_; cong)
 open import Cubical.Foundations.Function using (_∘_)
 open import Cubical.Relation.Binary.Base as CBinary renaming (Rel to REL) using (EquivRel)
@@ -70,18 +70,12 @@ module _ {I : Type 𝓥} {A : Type 𝓤 } where
  𝟎-IsEquivalence' = record {reflexive = λ a i → refl; symmetric = λ a b x i → sym (x i) ; transitive = λ a b c x y i → (x i ∙ y i) }
 
 
--- 𝟎-is-smallest : Setω
--- 𝟎-is-smallest = ∀{𝓥}{𝓤}{𝓦}{I : Type 𝓥}{A : Type 𝓤}(ρ : Rel (I → A) 𝓦) → IsEquivalence ρ → (x y : I → A) → 𝟎 x y → ρ x y
+𝟎-is-smallest : Typeω
+𝟎-is-smallest = ∀{𝓥}{𝓤}{𝓦}{I : Type 𝓥}{A : Type 𝓤}(ρ : Rel (I → A) 𝓦) → IsEquivalence ρ → (x y : I → A) → 𝟎 x y → ρ x y
 
 
 ker-IsEquivalence : {A : Type 𝓤}{B : Type 𝓦}(f : A → B) → IsEquivalence (ker f)
 ker-IsEquivalence f = record { reflexive = λ a i → f a ; symmetric = λ a b → sym ; transitive = λ a b c → _∙_ }
-
--- λ x → sym x
--- λ x y → x ∙ y
-\end{code}
-
-
 
 
 kernel-lemma : {𝓥 𝓤 : Level} → 𝟎-is-smallest → {I : Type 𝓥}{A : Type 𝓤}(f : (I → A) → A)(x y : I → A)
@@ -96,13 +90,14 @@ infix 60 [_]
 
 
 IsBlock : {A : Type 𝓤}(C : Pred A 𝓦){R : Rel A 𝓦} → Type(𝓤 ⊔ lsuc 𝓦)
-IsBlock {A = A} C {R} = Σ[ u ꞉ A ] C ≡ [ u ]{R}
+IsBlock {A = A} C {R} = Σ[ u ∈ A ] C ≡ [ u ]{R}
+
 
 
 module _ {𝓤 𝓦 : Level} where
 
  _/_ : (A : Type 𝓤 ) → Rel A 𝓦 → Type(𝓤 ⊔ lsuc 𝓦)
- A / R = Σ[ C ꞉ Pred A 𝓦 ] IsBlock C {R}
+ A / R = Σ[ C ∈ Pred A 𝓦 ] IsBlock C {R}
 
  infix -1 _/_
 
@@ -113,14 +108,19 @@ module _ {𝓤 𝓦 : Level} where
 ⌞_⌟ : {A : Type 𝓤}{R : Rel A 𝓦} → A / R  → A
 ⌞ C , a , p ⌟ = a
 
-private variable A : Type 𝓤 ; x y : A ; R : Rel A 𝓦
 open IsEquivalence
 
-/-subset : IsEquivalence R → R x y →  [ x ]{R} ⊆  [ y ]{R}
-/-subset Req Rxy {z} Rxz = IsEquivalence.trans Req (IsEquivalence.sym Req Rxy) Rxz
+/-subset : {𝓤 : Level}{A : Type 𝓤}{x y : A}{R : Rel A 𝓦}
+ →         IsEquivalence R → R x y →  [ x ]{R} ⊆ [ y ]{R}
+/-subset {x = x}{y = y}  Req  Rxy {z}  Rxz  =
+ transitive Req y x z (symmetric Req x y Rxy) Rxz -- C-c C-a automatic proof
 
-/-supset : IsEquivalence R → R x y →  [ y ]{R} ⊆ [ x ]{R}
-/-supset Req Rxy {z} Ryz = IsEquivalence.trans Req Rxy Ryz
+/-supset : {𝓤 : Level}{A : Type 𝓤}{x y : A}{R : Rel A 𝓦}
+ →         IsEquivalence R → R x y →  [ y ]{R} ⊆ [ x ]{R}
+/-supset {x = x}{y = y} Req Rxy {z} Ryz =
+ transitive Req x y z Rxy Ryz  -- C-c C-a proves this automatically
+
+\end{code}
 
 
 An example application of these is the `block-ext` type in the [Relations.Extensionality] module.
@@ -133,10 +133,6 @@ An example application of these is the `block-ext` type in the [Relations.Extens
 
 <br>
 <br>
-
-
-[← Relations.Continuous](Relations.Continuous.html)
-<span style="float:right;">[Relations.Truncation →](Relations.Truncation.html)</span>
 
 {% include UALib.Links.md %}
 
