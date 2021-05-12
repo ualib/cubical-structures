@@ -23,10 +23,6 @@ open import Cubical.Relation.Binary.Base renaming (Rel to REL) using ()
 open import Cubical.Data.Sigma using (_×_)
 
 
-
-
-
-
 open import overture.preliminaries using (𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩)
 
 module relations.discrete where
@@ -144,6 +140,19 @@ f |: R  = (eval-rel R) =[ f ]⇒ R
 
 
 {% include cubical-algebras.links.md %}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
