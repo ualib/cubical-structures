@@ -20,8 +20,7 @@ open import Cubical.Data.Sigma.Base using (_×_)
 
 
 -- Imports from the Agda Universal Algebra Library
-open import structures.basic
--- open import overture.preliminaries using (𝓞; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; Π; -Π; _⁻¹; id; ∣_∣; ∥_∥)
+open import structures.basic using (Signature; Structure; _ʳ_; _ᵒ_; compatible)
 open import overture.preliminaries using (id; _⁻¹; ∣_∣; ∥_∥)
 open import overture.inverses using (IsInjective; IsSurjective; Image_∋_; im)
 open import relations.discrete using (ker; ker')
@@ -29,10 +28,13 @@ open import relations.quotients using (ker-IsEquivalence; ⟪_/_⟫)
 
 module homs.basic {𝑅 𝐹 : Signature} where
 
-open import structures.congruences {𝑅 = 𝑅}{𝐹 = 𝐹}
+open import structures.congruences {𝑅 = 𝑅}{𝐹 = 𝐹} using (Con; _╱_)
+
+variable
+ α β γ : Level
 
 
-module _ {α β : Level} (𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹 {β}) where
+module _ (𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹 {β}) where
 
  comp-rel : (fst 𝑅) → ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β) -- (ℓ₁ ⊔ α)
  comp-rel R h = ∀ a → ((R ʳ 𝑨) a) → ((R ʳ 𝑩) (h ∘ a))
@@ -52,7 +54,7 @@ module _ {α β : Level} (𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅
  hom : Type (α ⊔ β)
  hom = Σ[ h ∈ ((fst 𝑨) → (fst 𝑩)) ] is-hom h
 
-module _ {α β γ : Level}(𝑨 : Structure 𝑅 𝐹 {α}){𝑩 : Structure 𝑅 𝐹 {β}}(𝑪 : Structure 𝑅 𝐹 {γ}) where
+module _ (𝑨 : Structure 𝑅 𝐹 {α}){𝑩 : Structure 𝑅 𝐹 {β}}(𝑪 : Structure 𝑅 𝐹 {γ}) where
 
  ∘-is-hom-rel : {f : (fst 𝑨) → (fst 𝑩)}{g : (fst 𝑩) → (fst 𝑪)}
   →             is-hom-rel 𝑨 𝑩 f → is-hom-rel 𝑩 𝑪 g → is-hom-rel 𝑨 𝑪 (g ∘ f)
@@ -76,10 +78,10 @@ module _ {α β γ : Level}(𝑨 : Structure 𝑅 𝐹 {α}){𝑩 : Structure �
  ∘-hom (f , fh) (g , gh) = g ∘ f , ∘-is-hom {f}{g} fh gh
 
 
-𝒾𝒹 : {α : Level}(𝑨 : Structure 𝑅 𝐹 {α}) → hom 𝑨 𝑨
+𝒾𝒹 : (𝑨 : Structure 𝑅 𝐹 {α}) → hom 𝑨 𝑨
 𝒾𝒹 _ = id , (λ R a z → z)  , (λ f a → refl)  -- (λ R a → refl)
 
-module _ {α β : Level}(𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹{β}) where
+module _ (𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹{β}) where
 
  is-mon : ((fst 𝑨) → (fst 𝑩)) → Type (α ⊔ β)
  is-mon g = is-hom 𝑨 𝑩 g × IsInjective g
@@ -93,13 +95,11 @@ module _ {α β : Level}(𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 
  epi : Type (α ⊔ β)
  epi = Σ[ g ∈ ((fst 𝑨) → (fst 𝑩)) ] is-epi g
 
-module _ {α β : Level} where
+mon-to-hom : (𝑨 : Structure 𝑅 𝐹{α}){𝑩 : Structure 𝑅 𝐹{β}} → mon 𝑨 𝑩 → hom 𝑨 𝑩
+mon-to-hom _ ϕ = (fst ϕ) , fst (snd ϕ )
 
- mon-to-hom : (𝑨 : Structure 𝑅 𝐹{α}){𝑩 : Structure 𝑅 𝐹{β}} → mon 𝑨 𝑩 → hom 𝑨 𝑩
- mon-to-hom _ ϕ = (fst ϕ) , fst (snd ϕ )
-
- epi-to-hom :  {𝑨 : Structure 𝑅 𝐹{α}}(𝑩 : Structure 𝑅 𝐹{β}) → epi 𝑨 𝑩 → hom 𝑨 𝑩
- epi-to-hom _ ϕ = (fst ϕ) , fst (snd ϕ)
+epi-to-hom :  {𝑨 : Structure 𝑅 𝐹{α}}(𝑩 : Structure 𝑅 𝐹{β}) → epi 𝑨 𝑩 → hom 𝑨 𝑩
+epi-to-hom _ ϕ = (fst ϕ) , fst (snd ϕ)
 
 \end{code}
 
@@ -121,17 +121,17 @@ The kernel of a homomorphism is a congruence relation and conversely for every c
 
 -- Our first use of the function extensionality THEOREM of Cubical Agda!
 
-module _ {α β : Level}{𝑨 : Structure 𝑅 𝐹 {α}} where
+module _ {𝑨 : Structure 𝑅 𝐹 {α}} where
  homker-comp : {𝑩 : Structure 𝑅 𝐹 {β}}(h : hom 𝑨 𝑩) → compatible 𝑨 (ker (fst h))
- homker-comp {𝑩} h f {u}{v} kuv = ((fst h) ((f ᵒ 𝑨) u))  ≡⟨(snd (snd h)) f u ⟩
-                                   ((f ᵒ 𝑩)((fst h) ∘ u)) ≡⟨ cong (f ᵒ 𝑩) (funExt kuv)⟩
-                                   ((f ᵒ 𝑩)((fst h) ∘ v)) ≡⟨((snd (snd h)) f v)⁻¹ ⟩
-                                   ((fst h)((f ᵒ 𝑨) v))   ∎
+ homker-comp {𝑩 = 𝑩} h f {u}{v} kuv = ((fst h) ((f ᵒ 𝑨) u))  ≡⟨(snd (snd h)) f u ⟩
+                                      ((f ᵒ 𝑩)((fst h) ∘ u)) ≡⟨ cong (f ᵒ 𝑩) (funExt kuv)⟩
+                                      ((f ᵒ 𝑩)((fst h) ∘ v)) ≡⟨((snd (snd h)) f v)⁻¹ ⟩
+                                      ((fst h)((f ᵒ 𝑨) v))   ∎
 
 
  -- open IsCongruence
  kercon : {𝑩 : Structure 𝑅 𝐹 {β}} → hom 𝑨 𝑩 → Con 𝑨
- kercon {𝑩} h = (ker ∣ h ∣ , ker-IsEquivalence ∣ h ∣) , (homker-comp {𝑩} h)
+ kercon {𝑩 = 𝑩} h = (ker ∣ h ∣ , ker-IsEquivalence ∣ h ∣) , (homker-comp {𝑩 = 𝑩} h)
 
 \end{code}
 
@@ -140,10 +140,10 @@ With this congruence we construct the corresponding quotient, along with some sy
 \begin{code}
 
  kerquo : {𝑩 : Structure 𝑅 𝐹 {β}} → hom 𝑨 𝑩 → Structure 𝑅 𝐹 --  {𝓤 ⊔ lsuc 𝓦}
- kerquo {𝑩} h = 𝑨 ╱ (kercon {𝑩} h)
+ kerquo {𝑩 = 𝑩} h = 𝑨 ╱ (kercon {𝑩 = 𝑩} h)
 
 
-ker[_⇒_]_ : {α β : Level}(𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹 {β}) → hom 𝑨 𝑩 → Structure 𝑅 𝐹
+ker[_⇒_]_ : (𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹 {β}) → hom 𝑨 𝑩 → Structure 𝑅 𝐹
 ker[ 𝑨 ⇒ 𝑩 ] h = kerquo {𝑩 = 𝑩} h
 
 \end{code}
@@ -158,7 +158,7 @@ Given an algebra `𝑨` and a congruence `θ`, the *canonical projection* is a m
 
 \begin{code}
 
-module _ {α β : Level}{𝑩 : Structure 𝑅 𝐹 {β}} where
+module _ {𝑩 : Structure 𝑅 𝐹 {β}} where
  open Image_∋_
  πepi : (θ : Con{α} 𝑩) → epi 𝑩 (𝑩 ╱ θ)
  πepi θ = (λ a → ⟪ a / ∣ θ ∣ ⟫) , (γrel , (λ _ _ → refl)) , cπ-is-epic  where  -- (λ _ _ → refl)
