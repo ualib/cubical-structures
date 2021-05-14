@@ -21,7 +21,7 @@ open import Cubical.Foundations.Function using (_∘_)
 module overture.preliminaries where
 
 variable
- 𝓘 𝓞 𝓠 𝓡 𝓢 𝓣 𝓤 𝓥 𝓦 𝓧 𝓨 𝓩 : Level
+ α β γ δ ι 𝓘 𝓞 𝓠 𝓡 𝓢 𝓣 𝓤 𝓥 𝓦 𝓧 𝓨 𝓩 : Level
 
 Π : {A : Type 𝓤 } (B : A → Type 𝓦 ) → Type (𝓤 ⊔ 𝓦)
 Π {A = A} B = (x : A) → B x

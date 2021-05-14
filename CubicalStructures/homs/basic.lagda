@@ -19,20 +19,16 @@ open import Cubical.Foundations.Function using (_∘_)
 open import Cubical.Data.Sigma.Base using (_×_)
 
 
--- open import Relation.Binary using (Rel; IsEquivalence)
--- open import Relation.Binary.PropositionalEquality.Core using (trans)
-
-
-
-
-
 -- Imports from the Agda Universal Algebra Library
 open import structures.basic
-open import overture.preliminaries using (𝓞; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; Π; -Π; _⁻¹; id)
+open import overture.preliminaries using (𝓞; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; Π; -Π; _⁻¹; id; ∣_∣; ∥_∥)
 open import overture.inverses using (IsInjective; IsSurjective)
 open import relations.discrete using (ker; ker') -- 𝟎; _|:_)
+open import relations.quotients using (ker-IsEquivalence)
 
-module homs.basic {𝑅 : Signature}{𝐹 : Signature} where
+module homs.basic {𝑅 𝐹 : Signature} where
+
+open import structures.congruences {𝑅 = 𝑅}{𝐹 = 𝐹}
 
 
 module _ {α β : Level} (𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹 {β}) where
@@ -132,8 +128,9 @@ module _ {α β : Level}{𝑨 : Structure 𝑅 𝐹 {α}} where
                                    ((fst h)((f ᵒ 𝑨) v))   ∎
 
 
- -- kercon : {𝑩 : Structure 𝑅 𝐹 {β}} → hom 𝑨 𝑩 → Con{𝓤}{𝓦} 𝑨
- -- kercon {𝑩} h = ker ∣ h ∣ , mkcon (ker-IsEquivalence ∣ h ∣)(homker-comp wd {𝑩} h)
+ open IsCongruence
+ kercon : {𝑩 : Structure 𝑅 𝐹 {β}} → hom 𝑨 𝑩 → Con 𝑨
+ kercon {𝑩} h = ker ∣ h ∣ , mkcon (ker-IsEquivalence ∣ h ∣)(homker-comp {𝑩} h)
 
 \end{code}
 
