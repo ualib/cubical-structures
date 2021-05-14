@@ -14,7 +14,7 @@ open import Agda.Builtin.Bool using (true; false)
 open import Agda.Primitive using (_⊔_)
 open import Data.Product using (∃; ∃-syntax)
 open import Relation.Nullary using (Dec; _because_; ofʸ)
-open import Relation.Unary using (Pred; _∈_) -- ; _⊆_)
+open import Relation.Unary using (Pred; _∈_)
 
 -- Imports from Cubical Agda
 open import Cubical.Core.Primitives
@@ -24,16 +24,18 @@ open import Cubical.Relation.Nullary renaming (Dec to cDec)
 open import Cubical.Data.Sigma using (_×_)
 
 
-open import overture.preliminaries using (𝓤; 𝓥; 𝓦; 𝓩; _⁻¹; 𝑖𝑑; _≈_)
+open import overture.preliminaries using (_⁻¹; 𝑖𝑑; _≈_)
 
 
 module overture.inverses where
 
+variable
+ α β γ : Level
 
-module _ {A : Type 𝓤 }{B : Type 𝓦 } where
+module _ {A : Type α }{B : Type β } where
 
  -- inverse images of functions
- data Image_∋_ (f : A → B) : B → Type (𝓤 ⊔ 𝓦)
+ data Image_∋_ (f : A → B) : B → Type (α ⊔ β)
   where
   im : (x : A) → Image f ∋ f x
   eq : (b : B) → (a : A) → b ≡ f a → Image f ∋ b
@@ -46,9 +48,9 @@ module _ {A : Type 𝓤 }{B : Type 𝓦 } where
  ImageTransfer f b1 b2 (eq .b1 a x) b1b2 = eq b2 a (b1b2 ⁻¹ ∙ x)
 
 
-module _ {A : Type 𝓤 }{B : A → Type 𝓦 } where
+module _ {A : Type α }{B : A → Type β } where
 
- data DepImage_∋_ (f : (a : A) → B a) : Σ[ a ∈ A ] B a → Type (𝓤 ⊔ 𝓦) where
+ data DepImage_∋_ (f : (a : A) → B a) : Σ[ a ∈ A ] B a → Type (α ⊔ β) where
   dim : (x : A) → DepImage f ∋ (x , f x)
   deq : ((a , b) : Σ[ a ∈ A ] B a) → b ≡ f a → DepImage f ∋ (a , b)
 
@@ -70,7 +72,7 @@ An inhabitant of `Image f ∋ b` is a dependent pair `(a , p)`, where `a : A` an
 
 \begin{code}
 
-module _ {A : Type 𝓤 }{B : Type 𝓦 } where
+module _ {A : Type α }{B : Type β } where
 
  Inv : (f : A → B){b : B} → Image f ∋ b  →  A
  Inv f {.(f a)} (im a) = a
@@ -113,7 +115,7 @@ The inverse image of each point in the codomain of a function can be represented
 
 \begin{code}
 
- InvImage : (f : A → B) → B → Pred A 𝓦
+ InvImage : (f : A → B) → B → Pred A β
  InvImage f b a = f a ≡ b
 
 \end{code}
@@ -126,18 +128,18 @@ We say that a function `f : A → B` is *injective* (or *monic*) if it does not 
 
 \begin{code}
 
-module _ {A : Type 𝓤}{B : Type 𝓦} where
+module _ {A : Type α}{B : Type β} where
 
- IsInjective : (A → B) → Type (𝓤 ⊔ 𝓦)
+ IsInjective : (A → B) → Type (α ⊔ β)
  IsInjective f = ∀ {x y} → f x ≡ f y → x ≡ y
 
- Injective : Type (𝓤 ⊔ 𝓦)
+ Injective : Type (α ⊔ β)
  Injective = Σ[ f ∈ (A → B) ] IsInjective f
 
- Range : (f : A → B) → Pred B (𝓤 ⊔ 𝓦)
+ Range : (f : A → B) → Pred B (α ⊔ β)
  Range f b = ∃[ a ] f a ≡ b
 
- -- data range (f : A → B) : Type (𝓤 ⊔ 𝓦)
+ -- data range (f : A → B) : Type (α ⊔ β)
  --  where
  --  rim : (x : A) → range f
  --  req : (b : B) → ∃[ a ∈ A ] f a ≡ b → range f
@@ -149,7 +151,7 @@ module _ {A : Type 𝓤}{B : Type 𝓦} where
  -- Range→Image : (f : A → B)(b : B) → b ∈ Range f → Image f ∋ b
  -- Range→Image f b ranfb = eq b (fst ranfb) (snd ranfb ⁻¹)
 
- data Option {𝓤 : Level}(A : Type 𝓤) : Type 𝓤 where
+ data Option {α : Level}(A : Type α) : Type α where
   some : A → Option A
   none : Option A
 
@@ -162,7 +164,7 @@ If we have an injective function `f : A → B` and for all `b : B` the assertion
  InjInv : (f : A → B) → (∀ b → Dec (b ∈ Range f)) → IsInjective f → B → Option A
  InjInv f dec finj b = invaux b (dec b)
   where
-  Ranfb : B → Type (𝓤 ⊔ 𝓦)
+  Ranfb : B → Type (α ⊔ β)
   Ranfb b = b ∈ Range f
 
   invaux : (b : B) → Dec (Ranfb b) → Option A
@@ -175,10 +177,10 @@ Before moving on to discuss surjective functions, let us prove (the obvious fact
 
 \begin{code}
 
-id-is-injective : {A : Type 𝓤} → IsInjective{A = A}{B = A} (λ x → x)
+id-is-injective : {A : Type α} → IsInjective{A = A}{B = A} (λ x → x)
 id-is-injective = λ z → z
 
-∘-injective : {A : Type 𝓤}{B : Type 𝓦}{C : Type 𝓩}{f : A → B}{g : B → C}
+∘-injective : {A : Type α}{B : Type β}{C : Type γ}{f : A → B}{g : B → C}
  →            IsInjective f → IsInjective g → IsInjective (g ∘ f)
 ∘-injective finj ginj = λ z → finj (ginj z)
 
@@ -191,11 +193,11 @@ A *surjective function* from `A` to `B` is a function `f : A → B` such that fo
 
 \begin{code}
 
-module _ {𝓤 𝓦 : Level}{A : Type 𝓤}{B : Type 𝓦} where
- IsSurjective : (A → B) →  Type (𝓤 ⊔ 𝓦)
+module _ {α β : Level}{A : Type α}{B : Type β} where
+ IsSurjective : (A → B) →  Type (α ⊔ β)
  IsSurjective f = ∀ y → Image f ∋ y
 
- Surjective : Type (𝓤 ⊔ 𝓦)
+ Surjective : Type (α ⊔ β)
  Surjective = Σ[ f ∈ (A → B) ] IsSurjective f
 
 \end{code}
@@ -218,12 +220,12 @@ For now, we settle for proof of the fact that `SurjInv` is a point-wise right-in
  SurjInvIsRightInv≈ : (f : A → B)(fE : IsSurjective f) → f ∘ (SurjInv f fE) ≈ 𝑖𝑑 B
  SurjInvIsRightInv≈ f fE = λ x → InvIsInv f (fE x)
 
-module _ {𝓤 𝓦 : Level}{A : Type 𝓤}{B : Type 𝓦} where
+module _ {α β : Level}{A : Type α}{B : Type β} where
 
- IsBijective : (A → B) →  Type (𝓤 ⊔ 𝓦)
+ IsBijective : (A → B) →  Type (α ⊔ β)
  IsBijective f = IsInjective f × IsSurjective f
 
- Bijective : Type (𝓤 ⊔ 𝓦)
+ Bijective : Type (α ⊔ β)
  Bijective = Σ[ f ∈ (A → B) ] IsBijective f
 
 \end{code}
@@ -242,7 +244,7 @@ We now prove that `BijInv f` is both a left and right inverse of `f`.
 
 \begin{code}
 
-module _ {𝓤 𝓦 : Level}{A : Type 𝓤}{B : Type 𝓦} where
+module _ {α β : Level}{A : Type α}{B : Type β} where
  -- InvIsLInv≈ : (f : A → B)(fb : IsBijective f) → (BijInv f fb) ∘ f ≈ 𝑖𝑑 A
  -- InvIsLInv≈ f (finj , fsurj) x = γ
  --  where
@@ -277,15 +279,34 @@ module _ {𝓤 𝓦 : Level}{A : Type 𝓤}{B : Type 𝓦} where
 
 \end{code}
 
+-------------------------------------------------------------------
+--                        THE END                                --
+-------------------------------------------------------------------
 
 
 
 
 
 
--------------------------------------
 
-{% include UALib.Links.md %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

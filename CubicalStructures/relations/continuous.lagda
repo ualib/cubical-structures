@@ -17,13 +17,13 @@ open import Agda.Primitive using (_⊔_; lsuc)
 open import Cubical.Core.Primitives using (Type; Level)
 open import Cubical.Foundations.Prelude using (_≡_; refl)
 
-open import overture.preliminaries using (𝓤; 𝓥; 𝓦)
-
 open import relations.discrete using (Op)
 
 
 module relations.continuous where
 
+variable
+ 𝓤 𝓥 𝓦 : Level
 
 ContRel : Type 𝓥 → Type 𝓤 → (𝓦 : Level) → Type(𝓤 ⊔ 𝓥 ⊔ lsuc 𝓦)
 ContRel I A 𝓦 = (I → A) → Type 𝓦
@@ -49,12 +49,7 @@ module _ {I J : Type 𝓥} {𝒜 : I → Type 𝓤} where
 
 \end{code}
 
------------------------
-
-{% include UALib.Links.md %}
-
-
-
--- open import Agda.Primitive using (_⊔_; lzero; lsuc; Level)
--- open import Agda.Builtin.Equality renaming (_≡_ to infix 0 _≡_)
+-------------------------------------------------------------------
+--                        THE END                                --
+-------------------------------------------------------------------
 

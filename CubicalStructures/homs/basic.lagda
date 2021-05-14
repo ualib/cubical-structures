@@ -21,10 +21,11 @@ open import Cubical.Data.Sigma.Base using (_×_)
 
 -- Imports from the Agda Universal Algebra Library
 open import structures.basic
-open import overture.preliminaries using (𝓞; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; Π; -Π; _⁻¹; id; ∣_∣; ∥_∥)
-open import overture.inverses using (IsInjective; IsSurjective)
-open import relations.discrete using (ker; ker') -- 𝟎; _|:_)
-open import relations.quotients using (ker-IsEquivalence)
+-- open import overture.preliminaries using (𝓞; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; Π; -Π; _⁻¹; id; ∣_∣; ∥_∥)
+open import overture.preliminaries using (id; _⁻¹; ∣_∣; ∥_∥)
+open import overture.inverses using (IsInjective; IsSurjective; Image_∋_; im)
+open import relations.discrete using (ker; ker')
+open import relations.quotients using (ker-IsEquivalence; ⟪_/_⟫)
 
 module homs.basic {𝑅 𝐹 : Signature} where
 
@@ -128,21 +129,22 @@ module _ {α β : Level}{𝑨 : Structure 𝑅 𝐹 {α}} where
                                    ((fst h)((f ᵒ 𝑨) v))   ∎
 
 
- open IsCongruence
+ -- open IsCongruence
  kercon : {𝑩 : Structure 𝑅 𝐹 {β}} → hom 𝑨 𝑩 → Con 𝑨
- kercon {𝑩} h = ker ∣ h ∣ , mkcon (ker-IsEquivalence ∣ h ∣)(homker-comp {𝑩} h)
+ kercon {𝑩} h = (ker ∣ h ∣ , ker-IsEquivalence ∣ h ∣) , (homker-comp {𝑩} h)
 
 \end{code}
 
 With this congruence we construct the corresponding quotient, along with some syntactic sugar to denote it.
 
+\begin{code}
 
- kerquo : swelldef 𝓥 𝓦 → {𝑩 : Algebra 𝓦 𝑆} → hom 𝑨 𝑩 → Algebra (𝓤 ⊔ lsuc 𝓦) 𝑆
- kerquo wd {𝑩} h = 𝑨 ╱ (kercon wd {𝑩} h)
+ kerquo : {𝑩 : Structure 𝑅 𝐹 {β}} → hom 𝑨 𝑩 → Structure 𝑅 𝐹 --  {𝓤 ⊔ lsuc 𝓦}
+ kerquo {𝑩} h = 𝑨 ╱ (kercon {𝑩} h)
 
 
-ker[_⇒_]_↾_ : (𝑨 : Algebra 𝓤 𝑆)(𝑩 : Algebra 𝓦 𝑆) → hom 𝑨 𝑩 → swelldef 𝓥 𝓦 → Algebra (𝓤 ⊔ lsuc 𝓦) 𝑆
-ker[ 𝑨 ⇒ 𝑩 ] h ↾ wd = kerquo wd {𝑩} h
+ker[_⇒_]_ : {α β : Level}(𝑨 : Structure 𝑅 𝐹 {α})(𝑩 : Structure 𝑅 𝐹 {β}) → hom 𝑨 𝑩 → Structure 𝑅 𝐹
+ker[ 𝑨 ⇒ 𝑩 ] h = kerquo {𝑩 = 𝑩} h
 
 \end{code}
 
@@ -154,12 +156,16 @@ Thus, given `h : hom 𝑨 𝑩`, we can construct the quotient of `𝑨` modulo 
 
 Given an algebra `𝑨` and a congruence `θ`, the *canonical projection* is a map from `𝑨` onto `𝑨 ╱ θ` that is constructed, and proved epimorphic, as follows.
 
+\begin{code}
 
-module _ {𝓤 𝓦 : Level}{𝑨 : Algebra 𝓤 𝑆} where
- πepi : (θ : Con{𝓤}{𝓦} 𝑨) → epi 𝑨 (𝑨 ╱ θ)
- πepi θ = (λ a → ⟪ a ⟫) , (λ _ _ → refl) , cπ-is-epic  where
-  cπ-is-epic : IsSurjective (λ a → ⟪ a ⟫)
-  cπ-is-epic (C , (a , refl)) =  Image_∋_.im a
+module _ {α β : Level}{𝑩 : Structure 𝑅 𝐹 {β}} where
+ open Image_∋_
+ πepi : (θ : Con{α} 𝑩) → epi 𝑩 (𝑩 ╱ θ)
+ πepi θ = (λ a → ⟪ a / ∣ θ ∣ ⟫) , (γrel , (λ _ _ → refl)) , cπ-is-epic  where  -- (λ _ _ → refl)
+  γrel : is-hom-rel 𝑩 (𝑩 ╱ θ) (λ a → ⟪ a / ∣ θ ∣ ⟫)
+  γrel R a x = {!!}
+  cπ-is-epic : IsSurjective (λ a → ⟪ a / ∣ θ ∣ ⟫)
+  cπ-is-epic (C , (a , Ca)) =  eq (C , (a , Ca)) a {!!} -- Image_∋_.im a
 
 \end{code}
 

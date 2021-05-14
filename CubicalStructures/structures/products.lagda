@@ -20,27 +20,27 @@ open import Cubical.Foundations.Function using (_∘_)
 open import Cubical.Data.Sigma.Base using (_×_)
 
 -- Imports from the Agda Universal Algebra Library
-open import overture.preliminaries using (𝓘; 𝓞; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; Π; -Π; _⁻¹; id; ∣_∣)
-open import structures.basic
+open import overture.preliminaries using (Π; Π-syntax; _⁻¹; id; ∣_∣)
+open import structures.basic using (Signature; Structure; _ʳ_; _ᵒ_; signature; structure)
 open import overture.inverses using (IsInjective; IsSurjective)
 open import relations.discrete using (ker)
 
 
 module structures.products  where
 
-module _ {𝑅 𝐹 : Signature}{β ι : Level} where
+variable
+ α β γ δ ι : Level
+
+module _ {𝑅 𝐹 : Signature} where
 
  ⨅ : (ℑ : Type ι)(ℬ : ℑ → Structure 𝑅 𝐹 {β}) → Structure 𝑅 𝐹
-
  ⨅ ℑ ℬ =
-  Π[ 𝔦 ꞉ ℑ ] ∣ ℬ 𝔦 ∣ ,                     -- domain of the product structure
+  Π[ 𝔦 ∈ ℑ ] ∣ ℬ 𝔦 ∣ ,                     -- domain of the product structure
   ( λ r 𝑎 → ∀ 𝔦 → (r ʳ ℬ 𝔦) λ x → 𝑎 x 𝔦 ) , -- interpretations of relations
   ( λ 𝑓 𝑎 𝔦 → (𝑓 ᵒ ℬ 𝔦) λ x → 𝑎 x 𝔦 )        -- interpretations of  operations
-
  -- Alternative notation for the domain of the product is `∀ 𝔦 → ∣ ℬ 𝔦 ∣`.
 
-
-module _ {𝑅 𝐹 : Signature}{β : Level}{𝒦 : Pred (Structure 𝑅 𝐹 {β}) (lsuc β)} where
+module _ {𝑅 𝐹 : Signature}{𝒦 : Pred (Structure 𝑅 𝐹 {β}) (lsuc β)} where
 
  ℑ : Type (lsuc β)
  ℑ = Σ[ 𝑨 ∈ Structure 𝑅 𝐹 ] 𝑨 ∈ 𝒦
@@ -60,17 +60,17 @@ If `p : 𝑨 ∈ 𝒦`, we view the pair `(𝑨 , p) ∈ ℑ` as an *index* over
 
 \begin{code}
 
-module _ {𝑅 𝐹 : signature}{β ι : Level} where
+module _ {𝑅 𝐹 : signature} where
  open structure
 
  ⨅' : (ℑ : Type ι)(ℬ : ℑ → structure 𝑅 𝐹 {β}) → structure 𝑅 𝐹
  ⨅' ℑ ℬ = record
-           { univ       = Π[ 𝔦 ꞉ ℑ ] univ (ℬ 𝔦)                       -- domain of the product structure
+           { univ       = Π[ 𝔦 ∈ ℑ ] univ (ℬ 𝔦)              -- domain of the product structure
            ; rel   = λ r 𝑎 → ∀ 𝔦 → rel (ℬ 𝔦) r (λ x → 𝑎 x 𝔦) -- interpretations of relations
-           ; op  = λ f 𝑎 𝔦 → op (ℬ 𝔦) f (λ x → 𝑎 x 𝔦)    -- interpretations of operations
+           ; op  = λ f 𝑎 𝔦 → op (ℬ 𝔦) f (λ x → 𝑎 x 𝔦)        -- interpretations of operations
            }
 
-module _ {𝑅 𝐹 : signature}{β ι : Level} {𝒦 : Pred (structure 𝑅 𝐹 {β}) (lsuc β)} where
+module _ {𝑅 𝐹 : signature} {𝒦 : Pred (structure 𝑅 𝐹 {β}) (lsuc β)} where
 
   ℑ' : Type (lsuc β)
   ℑ' = Σ[ 𝑨 ∈ structure 𝑅 𝐹 ] 𝑨 ∈ 𝒦
@@ -83,22 +83,9 @@ module _ {𝑅 𝐹 : signature}{β ι : Level} {𝒦 : Pred (structure 𝑅 �
 
 \end{code}
 
------------------------
-
-<sup>1</sup><span class="footnote" id="fn1"> If you haven't seen this before, give it some thought and see if the correct type comes to you organically.</span>
-
-<sup>2</sup><span class="footnote" id="fn2"> **Unicode Hints**. Some of our types are denoted with with Gothic ("mathfrak") symbols. To produce them in [agda2-mode][], type `\Mf` followed by a letter. For example, `\MfI` ↝ `ℑ`.</span>
-
-[← Algebras.Basic](Algebras.Basic.html)
-<span style="float:right;">[Algebras.Congruences →](Algebras.Congruences.html)</span>
-
-{% include UALib.Links.md %}
-
-
-
-
-
-
+-------------------------------------------------------------------
+--                        THE END                                --
+-------------------------------------------------------------------
 
 
 

@@ -20,57 +20,36 @@ open import Cubical.Relation.Binary.Base as CBinary renaming (Rel to REL) using 
 open CBinary.BinaryRelation renaming (isEquivRel to IsEquivalence)
 
 -- Imports from the Agda Universal Algebra Library
-open import overture.preliminaries using (𝓘; 𝓞; 𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; Π; -Π; _⁻¹; id; ∣_∣)
-open import structures.basic
+open import overture.preliminaries using (Π; Π-syntax; _⁻¹; id; ∣_∣)
 open import overture.inverses using (IsInjective; IsSurjective)
 open import relations.discrete renaming (Rel to BinRel) using (_|:_; ker)
-open import relations.quotients using (_/_; ⟪_/_⟫; _⌞_⌟; [_/_])
--- open import structures.products
+open import relations.quotients using (_/_; ⟪_/_⟫; _⌞_⌟; ⟪⟫≡-elim)
+open import structures.basic using (Signature; Structure; compatible; _ᵒ_; _ʳ_)
 
 
 
 module structures.congruences {𝑅 𝐹 : Signature} where
 
--- record IsCongruence {α β : Level} (𝑩 : Structure 𝑅 𝐹 {β})(θ : EquivRel ∣ 𝑩 ∣ α) : Type (α ⊔ β)  where
---  constructor mkcon
---  field       is-equivalence : IsEquivalence θ
---              is-compatible  : compatible 𝑩 θ
-
--- open IsCongruence
-
 Con : {α β : Level}(𝑩 : Structure 𝑅 𝐹 {β}) → Type (lsuc α ⊔ β)
 Con {α} 𝑩 = Σ[ θ ∈ EquivRel ∣ 𝑩 ∣ α ] (compatible 𝑩 ∣ θ ∣) -- IsCongruence 𝑩 θ
 
-\end{code}
+variable
+ β : Level
 
-Each of these types captures what it means to be a congruence and they are equivalent in the sense that each implies the other. One implication is the "uncurry" operation and the other is the second projection.
-
-\begin{code}
-
--- IsCongruence→Con : {α β : Level}{𝑩 : Structure 𝑅 𝐹 {β}}
---                    (θ : BinRel ∣ 𝑩 ∣ α) → IsCongruence 𝑩 θ → Con{α} 𝑩
--- IsCongruence→Con θ p = θ , p
-
--- Con→IsCongruence : {α β : Level}{𝑩 : Structure 𝑅 𝐹 {β}}
---                    ((θ , _) : Con{α} 𝑩) → IsCongruence{α} 𝑩 θ
--- Con→IsCongruence θ = snd θ
-
--- open IsEquivalence
-
-
-𝟎 : {β : Level}{B : Type β} → BinRel B β
+𝟎 : {B : Type β} → BinRel B β
 𝟎 x y = x ≡ y
 -- Rel : ∀{ℓ} → Type ℓ → (ℓ' : Level) → Type (ℓ ⊔ lsuc ℓ')
 -- Rel A ℓ' = REL A A ℓ'
 
-𝟎-IsEquivalence : {β : Level}{B : Type β} →  IsEquivalence {A = B} 𝟎
+
+𝟎-IsEquivalence : {B : Type β} →  IsEquivalence {A = B} 𝟎
 𝟎-IsEquivalence = record { reflexive = λ a _ → a
                          ; symmetric = λ _ _ x i → sym x i
                          ; transitive = λ _ _ _ 0ab 0bc i → (0ab ∙ 0bc) i
                          }
 
 
-module _ {α β : Level} {𝑩 : Structure 𝑅 𝐹 {β}} where
+module _ {𝑩 : Structure 𝑅 𝐹 {β}} where
 
 
  𝟎-compatible-op : (𝑓 : ∣ 𝐹 ∣) → (𝑓 ᵒ 𝑩) |: 𝟎
@@ -117,55 +96,24 @@ From this we easily obtain the zero congruence of `𝑨 ╱ θ` by applying the 
 \begin{code}
 
  𝟎[_╱_] : (𝑩 : Structure 𝑅 𝐹 {β})(θ : Con{α} 𝑩) → Con{lsuc α ⊔ β} (𝑩 ╱ θ)
- 𝟎[ 𝑩 ╱ θ ] =  𝟘 {α}{lsuc α ⊔ β}{𝑩 ╱ θ}
+ 𝟎[ 𝑩 ╱ θ ] =  𝟘 {𝑩 = 𝑩 ╱ θ}
 
 \end{code}
 
 
-Finally, the following elimination rule is sometimes
+Finally, the following elimination rule is sometimes useful.
 
 \begin{code}
 
- -- open IsCongruence
-
- /-≡ : {𝑩 : Structure 𝑅 𝐹 {β}}( (θ , _ ) : Con{α} 𝑩){u v : ∣ 𝑩 ∣} → ⟪ u / θ ⟫ ≡ ⟪ v / θ ⟫ → ∣ θ ∣ u v
- /-≡ θ {u}{v} x =  {!!} 
---   where
---   goal' : v ∈ [ u ]{∣ θ ∣}
---   goal' = {!!}
---   goal'' : [ u ]{∣ θ ∣} ≡ [ v ]{∣ θ ∣}
---   goal'' = cong fst x
--- --   goal'' = ⟪ a ⟫{R} = [ a ]{R} , (a  , refl)
-
---   goal : ∣ θ ∣ u v
---   goal = {!!}
-
-
-  -- λ x → cong fst {!!} {!!}  -- {u}{v} uv =  fst uv -- refl -- (is-equivalence {!snd θ!}) {!!}  -- {!fst!} uv {!!}
-
--- {!!} {!!} {!!} -- refl = reflexive (is-equivalence {!snd θ!}) {!!} -- IsEquivalence.refl (is-equivalence ∥ θ ∥)
+ /≡-elim : {𝑩 : Structure 𝑅 𝐹 {β}}( (θ , _ ) : Con{α} 𝑩){u v : ∣ 𝑩 ∣}
+  →    ⟪ u / θ ⟫ ≡ ⟪ v / θ ⟫ → ∣ θ ∣ u v
+ /≡-elim θ {u}{v} x =  ⟪⟫≡-elim {R = ∣ θ ∣} x
 
 \end{code}
 
---------------------------------------
-
-<sup>1</sup><span class="footnote" id="fn1"> **Unicode Hints**. Produce the `╱` symbol in [agda2-mode][] by typing `\---` and then `C-f` a number of times.</span>
-
-
-<br>
-<br>
-
-[← Algebras.Products](Algebras.Products.html)
-<span style="float:right;">[Homomorphisms →](Homomorphisms.html)</span>
-
-{% include UALib.Links.md %}
-
-
-
-
-
-
-
+-------------------------------------------------------------------
+--                        THE END                                --
+-------------------------------------------------------------------
 
 
 

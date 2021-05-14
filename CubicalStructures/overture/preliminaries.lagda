@@ -13,27 +13,28 @@ author: William DeMeo
 open import Agda.Primitive using (_⊔_; lsuc)
 
 -- Imports from Cubical Agda
-open import Cubical.Core.Primitives using (_≡_; Type; Level;Σ-syntax; fst; snd; _,_)
--- open import Cubical.Core.Primitives using (_≡_; Type; Level; i0; i1
+open import Cubical.Core.Primitives using (_≡_; Type; Level; Σ-syntax; fst; snd; _,_)
 open import Cubical.Foundations.Prelude using (refl; sym; _∙_; Lift; lift; lower)
 open import Cubical.Foundations.Function using (_∘_)
 
 module overture.preliminaries where
 
 variable
- α β γ δ ι 𝓘 𝓞 𝓠 𝓡 𝓢 𝓣 𝓤 𝓥 𝓦 𝓧 𝓨 𝓩 : Level
+ α β : Level
 
-Π : {A : Type 𝓤 } (B : A → Type 𝓦 ) → Type (𝓤 ⊔ 𝓦)
+{-Pi types. The dependent function type is traditionally denoted with a Pi symbol
+  typically arranged as Π(x : A) B x, or something similar.  In Agda syntax, one writes
+  `(x : A) → B x` for the dependent function type, but may use syntax that is closer
+  to the standard Π notation and made available in Agda as follows.-}
+Π : {A : Type α } (B : A → Type β ) → Type (α ⊔ β)   -- `\lub` ↝ ⊔
 Π {A = A} B = (x : A) → B x
-
--Π : (A : Type 𝓤 )(B : A → Type 𝓦 ) → Type(𝓤 ⊔ 𝓦)
--Π A B = Π B
-
-infixr 6 -Π
-syntax -Π A (λ x → B) = Π[ x ꞉ A ] B  -- type \,3 to get ⸲
+Π-syntax : (A : Type α)(B : A → Type β) → Type (α ⊔ β)
+Π-syntax A B = Π B
+syntax Π-syntax A (λ x → B) = Π[ x ∈ A ] B
+infix 6 Π-syntax
 
 
-module _ {A : Type 𝓤 }{B : A → Type 𝓥} where
+module _ {A : Type α }{B : A → Type β} where
 
  ∣_∣ : Σ[ x ∈ A ] B x → A
  ∣ x , y ∣ = x
@@ -43,34 +44,45 @@ module _ {A : Type 𝓤 }{B : A → Type 𝓥} where
 
  infix  40 ∣_∣ ∥_∥
 
-_⁻¹ : {A : Type 𝓤} {x y : A} → x ≡ y → y ≡ x
+_⁻¹ : {A : Type α} {x y : A} → x ≡ y → y ≡ x
 p ⁻¹ = sym p
 infix  40 _⁻¹
 
-id : {A : Type 𝓤} → A → A
+id : {A : Type α} → A → A
 id x = x
 
-𝑖𝑑 : (A : Type 𝓤 ) → A → A
+𝑖𝑑 : (A : Type α ) → A → A
 𝑖𝑑 A = λ x → x
 
-lift∼lower : ∀ {𝓤 𝓦}{A : Type 𝓤} → lift ∘ lower ≡ 𝑖𝑑 (Lift {j = 𝓦} A)
+lift∼lower : {A : Type α} → lift ∘ lower ≡ 𝑖𝑑 (Lift {j = β} A)
 lift∼lower = refl
 
-lower∼lift : {𝓤 𝓦 : Level}{A : Type 𝓤} → lower {𝓤}{𝓦}(lift {𝓤}{𝓦}(λ x → x)) ≡ 𝑖𝑑 A
+lower∼lift : {A : Type α} → lower {α}{β}(lift {α}{β}(λ x → x)) ≡ 𝑖𝑑 A
 lower∼lift = refl
 
-_≈_ : {X : Type 𝓤 } {A : X → Type 𝓥 } → Π A → Π A → Type (𝓤 ⊔ 𝓥)
+_≈_ : {A : Type α } {B : A → Type β } → Π B → Π B → Type (α ⊔ β)
 f ≈ g = ∀ x → f x ≡ g x
 
 infix 8 _≈_
 
 \end{code}
 
--------------------------
+-------------------------------------------------------------------
+--                        THE END                                --
+-------------------------------------------------------------------
 
-{% include cubical-algebras.links.md %}
 
-[agda-algebras]: https://github.com/ualib/agda-algebras
+
+
+
+
+
+
+
+
+
+
+
 
 
 

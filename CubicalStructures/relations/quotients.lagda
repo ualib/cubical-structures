@@ -19,20 +19,23 @@ open import Relation.Unary using (Pred; _∈_; _⊆_)
 open import Function.Base using (_on_)
 
 -- Imports from Cubical Agda
-open import Cubical.Core.Primitives using (_≡_; Type; Level; _,_; Σ-syntax; Typeω; transp; i0; i1)
+open import Cubical.Core.Primitives using (_≡_; Type; Level; _,_; Σ-syntax; Typeω; transp; i0; i1; fst)
 open import Cubical.Foundations.Prelude using (refl; sym; _∙_; cong; isProp)
 open import Cubical.Foundations.Function using (_∘_)
 open import Cubical.Relation.Binary.Base as CBinary renaming (Rel to REL) using (EquivRel)
 open CBinary.BinaryRelation renaming (isEquivRel to IsEquivalence)
+open import Cubical.HITs.TypeQuotients using (_/ₜ_; [_]; eq/)
 
 open import Cubical.Data.Sigma using (_×_)
 
-open import overture.preliminaries using (𝓤; 𝓥; 𝓦; 𝓧; 𝓨; 𝓩; ∣_∣; ∥_∥; _⁻¹)
+open import overture.preliminaries using (∣_∣; ∥_∥; _⁻¹)
 open import relations.discrete renaming (Rel to BinRel) using (ker; PropExt)
 
 
 module relations.quotients where
 
+variable
+ α β 𝓤 𝓥 𝓦 𝓧 𝓨 𝓩 : Level
 
 Refl : {A : Type 𝓤} → BinRel A 𝓦 → Type(𝓤 ⊔ 𝓦)
 Refl _≈_ = ∀{x} → x ≈ x
@@ -51,16 +54,10 @@ Equivalence {α}{β} B = Σ[ r ∈ BinRel B α ] IsEquivalence r
 
 open IsEquivalence
 
-\end{code}
-
-
-\begin{code}
-
 module _ {I : Type 𝓥} {A : Type 𝓤 } where
 
  𝟎 : BinRel (I → A) (𝓥 ⊔ 𝓤)
  𝟎 x y = ∀ i → x i ≡ y i
-
 
  𝟎-IsEquivalence : IsEquivalence 𝟎
  𝟎-IsEquivalence = equivRel
@@ -69,20 +66,30 @@ module _ {I : Type 𝓥} {A : Type 𝓤 } where
                    (λ a b c p q i i₁ → ((p i)∙(q i)) i₁)  -- transitive
 
  𝟎-IsEquivalence' : IsEquivalence 𝟎
- 𝟎-IsEquivalence' = record {reflexive = λ a i → refl; symmetric = λ a b x i → sym (x i) ; transitive = λ a b c x y i → (x i ∙ y i) }
+ 𝟎-IsEquivalence' = record
+                    { reflexive = λ a i → refl
+                    ; symmetric = λ a b x i → sym (x i)
+                    ; transitive = λ a b c x y i → (x i ∙ y i) }
 
 
 𝟎-is-smallest : Typeω
-𝟎-is-smallest = ∀{𝓥}{𝓤}{𝓦}{I : Type 𝓥}{A : Type 𝓤}(ρ : BinRel (I → A) 𝓦) → IsEquivalence ρ → (x y : I → A) → 𝟎 x y → ρ x y
+𝟎-is-smallest = ∀{𝓥}{𝓤}{𝓦}{I : Type 𝓥}{A : Type 𝓤}(ρ : BinRel (I → A) 𝓦)
+ →              IsEquivalence ρ → (x y : I → A) → 𝟎 x y → ρ x y
 
 
 ker-IsEquivalence : {A : Type 𝓤}{B : Type 𝓦}(f : A → B) → IsEquivalence (ker f)
-ker-IsEquivalence f = record { reflexive = λ a i → f a ; symmetric = λ a b → sym ; transitive = λ a b c → _∙_ }
+ker-IsEquivalence f = record
+                      { reflexive = λ a i → f a
+                      ; symmetric = λ a b → sym
+                      ; transitive = λ a b c → _∙_ }
 
 
-kernel-lemma : {𝓥 𝓤 : Level} → 𝟎-is-smallest → {I : Type 𝓥}{A : Type 𝓤}(f : (I → A) → A)(x y : I → A)
+kernel-lemma : {𝓥 𝓤 : Level} → 𝟎-is-smallest
+ →             {I : Type 𝓥}{A : Type 𝓤}(f : (I → A) → A)(x y : I → A)
  →             (∀ i → x i ≡ y i) → (ker f) x y
-kernel-lemma {𝓥}{𝓤} 0min {I = I}{A = A} f x y hyp = 0min (ker f) (ker-IsEquivalence{𝓤 = (𝓥 ⊔ 𝓤)}{A = (I → A)} f) x y hyp
+
+kernel-lemma {𝓥}{𝓤} 0min {I = I}{A = A} f x y hyp =
+ 0min (ker f) (ker-IsEquivalence{𝓤 = (𝓥 ⊔ 𝓤)}{A = (I → A)} f) x y hyp
 
 
 {- Old quotient development.
@@ -104,77 +111,79 @@ kernel-lemma {𝓥}{𝓤} 0min {I = I}{A = A} f x y hyp = 0min (ker f) (ker-IsEq
    Before defining the quotient type, we define a type representing inhabitants of quotients;
    i.e., blocks of a partition (recall partitions correspond to equivalence relations) -}
 
-[_/_] : {α β : Level}{B : Type β} → B → Equivalence{α} B → Pred B α
-[ u / R ] = ∣ R ∣ u
+[_/_]ₙ : {B : Type β} → B → Equivalence{α} B → Pred B α
+[ u / R ]ₙ = ∣ R ∣ u
 
 
-isProp[_/_] : {α β : Level}{B : Type β} → B → Equivalence{α} B → Type (α ⊔ β)
-isProp[ u / R ] = (∀ x → isProp (x ∈ [ u / R ]))
+isProp[_/_] : {B : Type β} → B → Equivalence{α} B → Type (α ⊔ β)
+isProp[ u / R ] = (∀ x → isProp (x ∈ [ u / R ]ₙ))
 
 
--- infix 60 [_/_]
+-- infix 60 [_/_]ₙ
 
-module _ {α β : Level}{B : Type β}{R : Equivalence{α} B} where
+module _ {B : Type β}{R : Equivalence{α} B} where
 
- []/elim≡ : (u v : B) → [ u / R ] ≡ [ v / R ] → v ∈ [ u / R ]
- []/elim≡ u v uv = goal
-  where
-  ξ : v ∈ [ v / R ]
-  ξ = reflexive ∥ R ∥ v
-  goal : v ∈ [ u / R ]
-  goal = transp (λ i → (uv ⁻¹) i v ) i0 ξ
+ []-⊆ : {u v : B} → ∣ R ∣ u v →  [ u / R ]ₙ ⊆ [ v / R ]ₙ
+ []-⊆ {u}{v} Ruv {x} ux = transitive ∥ R ∥ v u x (symmetric ∥ R ∥ u v Ruv) ux
 
- []/subset : {u v : B} → ∣ R ∣ u v →  [ u / R ] ⊆ [ v / R ]
- []/subset {u}{v} Ruv {x} ux = transitive ∥ R ∥ v u x (symmetric ∥ R ∥ u v Ruv) ux
-
- []/supset : {u v : B} → ∣ R ∣ u v → [ v / R ] ⊆ [ u / R ]
- []/supset {u}{v} Ruv {x} Rvx = transitive ∥ R ∥ u v x Ruv Rvx
-
+ []-⊇ : {u v : B} → ∣ R ∣ u v → [ v / R ]ₙ ⊆ [ u / R ]ₙ
+ []-⊇ {u}{v} Ruv {x} Rvx = transitive ∥ R ∥ u v x Ruv Rvx
 
  {- If we assume that for each x there is at most one proof that x ∈ [ u / R ],
     and similarly for x ∈ [ v / R ], then we can prove the following equivalence
     of blocks of an equivalence relation. -}
- []/elimR : (u v : B) → isProp[ u / R ] → isProp[ v / R ]
-  →          ∣ R ∣ u v → [ u / R ] ≡ [ v / R ]
+ []≡-intro : (u v : B) → isProp[ u / R ] → isProp[ v / R ]
+  →          ∣ R ∣ u v → [ u / R ]ₙ ≡ [ v / R ]ₙ
 
- []/elimR u v propu propv uv = PropExt ([ u / R ]) ([ v / R ]) propu propv ([]/subset uv) ([]/supset uv)
+ []≡-intro u v propu propv uv = PropExt ([ u / R ]ₙ) ([ v / R ]ₙ) propu propv ([]-⊆ uv) ([]-⊇ uv)
 
- []/elim∈ : (u v : B) → (∀ x → isProp (x ∈ [ u / R ])) → (∀ x → isProp (x ∈ [ v / R ]))
-  →          v ∈ [ u / R ] → [ u / R ] ≡ [ v / R ]
- []/elim∈ u v propu propv uv = []/elimR u v propu propv uv
+ []≡-elim : {u v : B} → [ u / R ]ₙ ≡ [ v / R ]ₙ → ∣ R ∣ u v
+ []≡-elim {u}{v} uv = goal
+  where
+  ξ : v ∈ [ v / R ]ₙ
+  ξ = reflexive ∥ R ∥ v
+  goal : v ∈ [ u / R ]ₙ
+  goal = transp (λ i → (uv ⁻¹) i v ) i0 ξ
+
 
  IsBlock : (C : Pred B _) → Type (lsuc α ⊔ β)
- IsBlock C = Σ[ u ∈ B ] C ≡ [ u / R ]
+ IsBlock C = Σ[ u ∈ B ] C ≡ [ u / R ]ₙ
+
 
 -- Quotients.
-_/_ : {α β : Level}(B : Type β ) → Equivalence{α} B → Type (lsuc α ⊔ β)
+_/_ : (B : Type β ) → Equivalence{α} B → Type (lsuc α ⊔ β)
 B / R = Σ[ C ∈ Pred B _ ] IsBlock {R = R} C
 
 infix -1 _/_
-module _ {α β : Level}{B : Type β} where
+module _ {B : Type β} where
 
  ⟪_/_⟫ : B → (R : Equivalence {α} B) → B / R
- ⟪ b / R ⟫ = [ b / R ] , (b  , refl)
+ ⟪ b / R ⟫ = [ b / R ]ₙ , (b  , refl)
 
  _⌞_⌟ : (R : Equivalence {α} B) → B / R  → B
  R ⌞ C , b , p ⌟ = b
 
+module _ {B : Type β}{R : Equivalence {α} B} where
 
+ ⟪⟫≡-elim : {u v : B} → ⟪ u / R ⟫ ≡ ⟪ v / R ⟫ → ∣ R ∣ u v
+ ⟪⟫≡-elim uv = []≡-elim {R = R}(cong fst uv)
 
 \end{code}
 
+-------------------------------------------------------------------
+--                        THE END                                --
+-------------------------------------------------------------------
 
 
---------------------------------------
 
 
-<sup>1</sup><span class="footnote" id="fn1">**Unicode Hints** ([agda2-mode][]). `\cl ↝ ⌞`; `\clr ↝ ⌟`.</span>
 
 
-<br>
-<br>
 
-{% include UALib.Links.md %}
+
+
+
+
 
 
 
